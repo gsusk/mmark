@@ -73,7 +73,7 @@ public class SecurityConfig {
                                         AuthRoutes.LOGIN,
                                         AuthRoutes.REFRESH_TOKEN
                                 ).permitAll()
-                                .requestMatchers(HttpMethod.GET, ProductRoutes.GET_PRODUCT).permitAll()
+                                .requestMatchers(HttpMethod.GET, ProductRoutes.GET_PRODUCT, ProductRoutes.GET_FEATURED_PRODUCTS).permitAll()
                                 .requestMatchers("/error", "/cart", "/cart/**", "/search").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.POST, ProductRoutes.CREATE_PRODUCT).hasRole("ADMIN")

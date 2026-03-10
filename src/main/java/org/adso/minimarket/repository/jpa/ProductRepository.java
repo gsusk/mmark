@@ -24,4 +24,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<Product> findForUpdateAllByIdIn(List<Long> ids);
+
+    @EntityGraph(attributePaths = {"category", "images"})
+    List<Product> findTop8ByOrderByCreatedAtDesc();
 }

@@ -18,4 +18,6 @@ public interface ProductController {
     ResponseEntity<?> delete(@PathVariable Long id);
 
     ResponseEntity<?> getById(@PathVariable @Min(1) @Valid Long id);
+
+    ResponseEntity<?> getFeatured();
 }

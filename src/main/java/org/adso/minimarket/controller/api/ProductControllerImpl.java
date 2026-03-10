@@ -48,4 +48,10 @@ public class ProductControllerImpl implements ProductController {
     public ResponseEntity<DetailedProduct> getById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getDetailedProductById(id));
     }
+
+    @Override
+    @GetMapping(ProductRoutes.GET_FEATURED_PRODUCTS)
+    public ResponseEntity<?> getFeatured() {
+        return ResponseEntity.ok(productService.getFeaturedProducts());
+    }
 }

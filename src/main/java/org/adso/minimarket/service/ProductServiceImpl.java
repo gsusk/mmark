@@ -89,6 +89,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<DetailedProduct> getFeaturedProducts() {
+        return productRepository.findTop8ByOrderByCreatedAtDesc()
+                .stream()
+                .map(productMapper::toDto)
+                .toList();
+    }
+
+    @Override
     public DetailedProduct getDetailedProductById(Long id) {
         return productMapper.toDto(productRepository.findDetailedById(id).orElseThrow(
                 () -> new NotFoundException("Product not found")

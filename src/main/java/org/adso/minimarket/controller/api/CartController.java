@@ -2,6 +2,7 @@ package org.adso.minimarket.controller.api;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.adso.minimarket.config.UserPrincipal;
 import org.adso.minimarket.dto.AddCartItemRequest;
 import org.adso.minimarket.dto.ShoppingCart;
@@ -21,10 +22,10 @@ public interface CartController {
 
     ResponseEntity<ShoppingCart> deleteItem(UserPrincipal userPrincipal,
                                             UUID guestId,
-                                            Long productId);
+                                            @Min(1) Long productId);
 
     ResponseEntity<ShoppingCart> updateItemQuantity(UserPrincipal userPrincipal,
                                                     @Valid UpdateQuantityRequest body,
                                                     UUID guestId,
-                                                    Long productId);
+                                                    @Min(1) Long productId);
 }
