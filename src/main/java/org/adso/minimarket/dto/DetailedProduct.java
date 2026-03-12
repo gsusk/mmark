@@ -18,6 +18,7 @@ import java.util.List;
 public class DetailedProduct {
     private Long id;
     private String name;
+    private String slug;
     private String description;
     private String price;
     private CategorySummary category;

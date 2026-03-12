@@ -49,6 +49,7 @@ public class ProductSeederEvent {
             productDocuments.add(new ProductDocument(
                     p.getId(),
                     p.getName(),
+                    p.getSlug(),
                     p.getDescription(),
                     p.getCategory().getName(),
                     p.getPrice(),

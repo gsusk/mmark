@@ -27,6 +27,8 @@ public class ProductDocument {
     // @Field(type = FieldType.Text, analyzer = "standard")
     private String name;
 
+    private String slug;
+
     // @Field(type = FieldType.Text, analyzer = "standard")
     private String description;
 
@@ -56,6 +58,7 @@ public class ProductDocument {
         return new ProductCard(
                 id,
                 name,
+                slug,
                 category,
                 price,
                 brand,

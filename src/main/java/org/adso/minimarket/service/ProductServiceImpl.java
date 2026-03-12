@@ -158,6 +158,7 @@ public class ProductServiceImpl implements ProductService {
         ProductDocument productDocument = new ProductDocument(
                 product.getId(),
                 product.getName(),
+                product.getSlug(),
                 product.getDescription(),
                 categoryName,
                 product.getPrice(),

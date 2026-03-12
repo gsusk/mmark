@@ -7,6 +7,7 @@ import java.util.List;
 public record ProductCard(
         Long id,
         String name,
+        String slug,
         String category,
         BigDecimal price,
         String brand,

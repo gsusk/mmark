@@ -14,6 +14,7 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.Normalizer;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -28,6 +29,9 @@ public class Product {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(unique = true, nullable = false, length = 300)
+    private String slug;
 
     private String description;
 
@@ -64,6 +68,7 @@ public class Product {
     public Product(String name, String description, BigDecimal price, Integer stock, Category category, String brand,
                    Map<String, Object> attributes) {
         this.name = name;
+        this.slug = generateSlug(name);
         this.description = description;
         this.price = normalizePrice(price);
         this.category = category;
@@ -110,6 +115,22 @@ public class Product {
 
     public void setName(String name) {
         this.name = name;
+        this.slug = generateSlug(name);
+    }
+
+    public void setSlug(String slug) {
+        this.slug = slug;
+    }
+
+    public static String generateSlug(String name) {
+        if (name == null) return null;
+        String normalized = Normalizer.normalize(name, Normalizer.Form.NFD);
+        String stripped = normalized.replaceAll("[\\p{InCombiningDiacriticalMarks}]", "");
+        return stripped.toLowerCase()
+                .replaceAll("[^a-z0-9\\s-]", "")
+                .trim()
+                .replaceAll("/", "-")
+                .replaceAll("[\\s-]+", "-");
     }
 
     public void setDescription(String description) {

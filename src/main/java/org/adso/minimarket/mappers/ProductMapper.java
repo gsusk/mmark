@@ -16,6 +16,7 @@ public interface ProductMapper {
     )
     @Mapping(target = "category", source = "category")
     @Mapping(target = "brand", source = "brand")
+    @Mapping(target = "slug", source = "slug")
     DetailedProduct toDto(Product product);
 
     @AfterMapping
