@@ -1,0 +1,24 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:9.2.4
+    container_name: minimarket-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - "ELASTIC_PASSWORD=${ES_PASSWORD}"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - minimarket-net
+
+volumes:
+  esdata:
+    driver: local
+
+networks:
+  minimarket-net:
+    driver: bridge

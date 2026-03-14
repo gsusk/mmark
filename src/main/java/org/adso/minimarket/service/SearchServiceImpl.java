@@ -1,27 +1,27 @@
 package org.adso.minimarket.service;
 
-//import co.elastic.clients.elasticsearch._types.FieldValue;
-//import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
-//import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
-//import co.elastic.clients.elasticsearch._types.aggregations.AggregationBuilders;
-//import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-//import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
-//import lombok.extern.slf4j.Slf4j;
-//import org.adso.minimarket.dto.FacetValue;
-//import org.adso.minimarket.dto.ProductCard;
-//import org.adso.minimarket.dto.SearchFilters;
-//import org.adso.minimarket.dto.SearchResult;
-//import org.adso.minimarket.models.document.ProductDocument;
-//import org.adso.minimarket.repository.elastic.ProductSearchRepository;
-//import org.adso.minimarket.validation.AttributeDefinition;
-//import org.adso.minimarket.validation.AttributeSchemaValidator;
-//import org.adso.minimarket.validation.FacetStrategy;
-//import org.adso.minimarket.validation.FilterType;
-//import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
-//import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-//import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
-//import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-//import org.springframework.data.elasticsearch.core.SearchHits;
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+import co.elastic.clients.elasticsearch._types.aggregations.AggregationBuilders;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+import lombok.extern.slf4j.Slf4j;
+import org.adso.minimarket.dto.FacetValue;
+import org.adso.minimarket.dto.ProductCard;
+import org.adso.minimarket.dto.SearchFilters;
+import org.adso.minimarket.dto.SearchResult;
+import org.adso.minimarket.models.document.ProductDocument;
+import org.adso.minimarket.repository.elastic.ProductSearchRepository;
+import org.adso.minimarket.validation.AttributeDefinition;
+import org.adso.minimarket.validation.AttributeSchemaValidator;
+import org.adso.minimarket.validation.FacetStrategy;
+import org.adso.minimarket.validation.FilterType;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -30,7 +30,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-/*@Slf4j
+@Slf4j
 @Service
 public class SearchServiceImpl implements SearchService {
     private static final String FIELD_PRICE = "price";
@@ -417,4 +417,4 @@ public class SearchServiceImpl implements SearchService {
     private boolean isValidDouble(Double value) {
         return value != null && !value.isNaN() && !value.isInfinite();
     }
-}*/
+}
