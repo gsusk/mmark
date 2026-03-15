@@ -5,6 +5,8 @@ import org.adso.minimarket.models.Category;
 import org.adso.minimarket.repository.jpa.CategoryRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
@@ -26,5 +28,10 @@ public class CategoryServiceImpl implements CategoryService {
             parent = getById(request.getParentId());
         }
         return this.categoryRepository.save(new Category(request.getName(), request.getAttributeDefinitions(), parent));
+    }
+
+    @Override
+    public List<Category> getAllFeaturedCategories() {
+        return this.categoryRepository.findTop4ByOrderByIdAsc();
     }
 }

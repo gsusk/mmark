@@ -73,8 +73,9 @@ public class SecurityConfig {
                                         AuthRoutes.LOGIN,
                                         AuthRoutes.REFRESH_TOKEN
                                 ).permitAll()
-                                .requestMatchers(HttpMethod.GET, ProductRoutes.GET_PRODUCT, ProductRoutes.GET_FEATURED_PRODUCTS).permitAll()
-                                .requestMatchers("/error", "/cart", "/cart/**", "/search").permitAll()
+                                .requestMatchers(HttpMethod.GET, ProductRoutes.GET_PRODUCT,
+                                        ProductRoutes.GET_FEATURED_PRODUCTS).permitAll()
+                                .requestMatchers("/error", "/cart", "/cart/**", "/search", "/categories/featured").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.POST, ProductRoutes.CREATE_PRODUCT).hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, ProductRoutes.UPDATE_PRODUCT).hasRole("ADMIN")
