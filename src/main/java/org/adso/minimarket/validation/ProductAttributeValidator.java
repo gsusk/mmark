@@ -9,6 +9,8 @@ import java.util.*;
 public class ProductAttributeValidator {
 
     public void validate(Map<String, Object> attributes, List<Map<String, Object>> definitionMaps) {
+        // Esta es la barrera de defensa cuando un admin intenta guardar un producto.
+        // Comparamos el JSON que manda contra las reglas maestras de esa categoria en especifico.
         if (definitionMaps == null || definitionMaps.isEmpty()) {
             return;
         }
@@ -93,6 +95,8 @@ public class ProductAttributeValidator {
         };
 
         if (!isValid) {
+            // Un chequeo de tipos para asegurarnos de que no estemos guardando strings
+            // en propiedades numericas que romperian Elasticsearch a futuro.
             String actualType = getActualType(value);
             String expectedTypeStr = expectedType.name().toLowerCase();
             

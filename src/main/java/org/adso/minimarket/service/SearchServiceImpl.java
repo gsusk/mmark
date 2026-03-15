@@ -5,6 +5,7 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.AggregationBuilders;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import lombok.extern.slf4j.Slf4j;
 import org.adso.minimarket.dto.FacetValue;
@@ -23,6 +24,7 @@ import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -84,104 +86,119 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private NativeQuery buildQuery(SearchFilters filters, String query) {
-        BoolQuery boolQuery = buildBoolQuery(filters, query);
-        BoolQuery postFilterQuery = buildPostFilterQuery(filters);
-
+        Query baseQuery = buildBaseQuery(filters.getCategory(), query);
+        Map<String, Query> filterMap = buildFilterMap(filters);
+        
         NativeQueryBuilder nqBuilder = NativeQuery.builder()
-                .withQuery(q -> q.bool(boolQuery))
-                .withAggregation(AGG_MIN_PRICE, AggregationBuilders.min(m -> m.field(FIELD_PRICE)))
-                .withAggregation(AGG_MAX_PRICE, AggregationBuilders.max(m -> m.field(FIELD_PRICE)))
+                .withQuery(baseQuery)
                 .withMaxResults(MAX_RESULTS);
 
-        addFacetAggregations(nqBuilder, filters.getCategory());
-
-        if (hasFilters(postFilterQuery)) {
-            nqBuilder.withFilter(f -> f.bool(postFilterQuery));
+        if (!filterMap.isEmpty()) {
+            // Aplicamos los filtros DESPUES de la busqueda global usando un post-filter.
+            // Asi las estadisticas como min_price/max_price o los facets de categorias se pueden 
+            // calcular de manera correcta sin ser mutilados por el propio filtro (e.g no achicar el slider de precio).
+            BoolQuery.Builder postFilterBool = new BoolQuery.Builder();
+            filterMap.values().forEach(postFilterBool::filter);
+            nqBuilder.withFilter(Query.of(q -> q.bool(postFilterBool.build())));
         }
+
+        Aggregation priceAgg = buildFilterAgg(FIELD_PRICE, null, 0, filterMap, true);
+        nqBuilder.withAggregation("price_stats", priceAgg);
+
+        addAdvancedFacetAggregations(nqBuilder, filters, filterMap);
 
         return nqBuilder.build();
     }
 
-    private BoolQuery buildBoolQuery(SearchFilters filters, String query) {
-        BoolQuery.Builder bool = new BoolQuery.Builder()
-                .must(mu -> mu.bool(b -> b
-                        .should(s -> s.multiMatch(m -> m
-                                .fields(FIELD_NAME + "^3", FIELD_DESCRIPTION + "^1")
-                                .query(query)
-                                .fuzziness(FUZZINESS_AUTO)
-                                .type(TextQueryType.BestFields)))
-                        .should(s -> s.prefix(p -> p
-                                .field(FIELD_NAME)
-                                .value(query.toLowerCase())))));
+    private Query buildBaseQuery(String category, String queryStr) {
+        BoolQuery.Builder base = new BoolQuery.Builder();
+        
+        if (StringUtils.hasText(queryStr)) {
+            base.must(mu -> mu.bool(b -> b
+                    .should(s -> s.multiMatch(m -> m
+                            .fields(FIELD_NAME + "^3", FIELD_DESCRIPTION + "^1")
+                            .query(queryStr)
+                            .fuzziness(FUZZINESS_AUTO)
+                            .type(TextQueryType.BestFields)))
+                    .should(s -> s.prefix(p -> p
+                            .field(FIELD_NAME)
+                            .value(queryStr.toLowerCase())))));
+        } else {
+            base.must(m -> m.matchAll(a -> a));
+        }
 
-        if (isNotBlank(filters.getCategory())) {
-            bool.filter(f -> f.term(t -> t
+        if (StringUtils.hasText(category)) {
+            base.filter(f -> f.term(t -> t
                     .field(FIELD_CATEGORY)
-                    .value(filters.getCategory())
+                    .value(category)
                     .caseInsensitive(true)));
         }
 
-        return bool.build();
+        return base.build()._toQuery();
     }
 
-    private BoolQuery buildPostFilterQuery(SearchFilters filters) {
-        BoolQuery.Builder postFilter = new BoolQuery.Builder();
+    private Map<String, Query> buildFilterMap(SearchFilters filters) {
+        Map<String, Query> filterMap = new HashMap<>();
 
-        applyPriceFilters(postFilter, filters);
-        applyBrandFilter(postFilter, filters);
-        applyAttributeFilters(postFilter, filters);
-
-        return postFilter.build();
-    }
-
-    private void applyPriceFilters(BoolQuery.Builder postFilter, SearchFilters filters) {
-        if (isValidPrice(filters.getMinPrice())) {
-            postFilter.filter(f -> f.range(r -> r.number(n -> n
-                    .field(FIELD_PRICE)
-                    .gte(filters.getMinPrice().doubleValue()))));
+        if (isValidPrice(filters.getMinPrice()) || isValidPrice(filters.getMaxPrice())) {
+            filterMap.put(FIELD_PRICE, buildPriceQuery(filters)._toQuery());
         }
 
-        if (isValidPrice(filters.getMaxPrice())) {
-            postFilter.filter(f -> f.range(r -> r.number(n -> n
-                    .field(FIELD_PRICE)
-                    .lte(filters.getMaxPrice().doubleValue()))));
-        }
-    }
-
-    private void applyBrandFilter(BoolQuery.Builder postFilter, SearchFilters filters) {
-        if (isNotBlank(filters.getBrand())) {
-            postFilter.filter(f -> f.term(t -> t
-                    .field(FIELD_BRAND)
-                    .value(filters.getBrand())
-                    .caseInsensitive(true)));
-        }
-    }
-
-    private void applyAttributeFilters(BoolQuery.Builder postFilter, SearchFilters filters) {
-        if (filters.getAttributes() == null || filters.getAttributes().isEmpty()) {
-            return;
+        if (StringUtils.hasText(filters.getBrand())) {
+             filterMap.put(FIELD_BRAND, Query.of(q -> q.term(t -> t.field(FIELD_BRAND).value(filters.getBrand()).caseInsensitive(true))));
         }
 
-        filters.getAttributes().entrySet().stream()
-                .filter(entry -> isNotBlank(entry.getValue()))
-                .forEach(entry -> {
-                    FilterType filterType = attributeSchemaValidator.getFilterType(
-                            filters.getCategory(), entry.getKey());
-                    applyAttributeFilter(postFilter, entry.getKey(), entry.getValue(), filterType);
-                });
+        if (filters.getAttributes() != null) {
+            filters.getAttributes().entrySet().stream()
+                    .filter(entry -> StringUtils.hasText(entry.getValue()))
+                    .forEach(entry -> {
+                        String attrName = entry.getKey();
+                        FilterType type = attributeSchemaValidator.getFilterType(filters.getCategory(), attrName);
+                        Query attrQuery = buildNestedAttributeQuery(attrName, entry.getValue(), type);
+                        if (attrQuery != null) {
+                            filterMap.put(attrName, attrQuery);
+                        }
+                    });
+        }
+
+        return filterMap;
     }
 
-    private void applyAttributeFilter(BoolQuery.Builder postFilter, String attrName, String attrValue,
-                                      FilterType filterType) {
+    private co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery buildPriceQuery(SearchFilters filters) {
+        return co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery.of(r -> {
+            r.number(n -> {
+                n.field(FIELD_PRICE);
+                if (isValidPrice(filters.getMinPrice())) {
+                    n.gte(filters.getMinPrice().doubleValue());
+                }
+                if (isValidPrice(filters.getMaxPrice())) {
+                    n.lte(filters.getMaxPrice().doubleValue());
+                }
+                return n;
+            });
+            return r;
+        });
+    }
+
+    private Query buildNestedAttributeQuery(String attrName, String attrValue, FilterType filterType) {
+        BoolQuery.Builder innerBq = new BoolQuery.Builder();
         String fieldPath = FIELD_SPECIFICATIONS + "." + attrName;
 
         switch (filterType) {
-            case TERM -> applyTermFilter(postFilter, fieldPath, attrValue);
-            case MULTI_SELECT -> applyMultiSelectFilter(postFilter, fieldPath, attrValue);
-            case BOOLEAN -> applyBooleanFilter(postFilter, fieldPath, attrValue);
-            case RANGE -> applyRangeFilter(postFilter, fieldPath, attrValue, attrName);
-            default -> log.warn("Attribute '{}' has filter type NONE, skipping", attrName);
+            case TERM -> applyTermFilter(innerBq, fieldPath, attrValue);
+            case MULTI_SELECT -> applyMultiSelectFilter(innerBq, fieldPath, attrValue);
+            case BOOLEAN -> applyBooleanFilter(innerBq, fieldPath, attrValue);
+            case RANGE -> applyRangeFilter(innerBq, fieldPath, attrValue, attrName);
+            default -> { return null; }
         }
+        
+        List<Query> innerFilters = innerBq.build().filter();
+        if (innerFilters.isEmpty()) return null;
+
+        return Query.of(q -> q.nested(n -> n
+                .path(FIELD_SPECIFICATIONS)
+                .query(innerFilters.get(0))
+        ));
     }
 
     private void applyTermFilter(BoolQuery.Builder postFilter, String fieldPath, String value) {
@@ -223,10 +240,7 @@ public class SearchServiceImpl implements SearchService {
                 String[] parts = value.split("-");
                 double min = Double.parseDouble(parts[0].trim());
                 double max = Double.parseDouble(parts[1].trim());
-                postFilter.filter(f -> f.range(r -> r.number(n -> n
-                        .field(fieldPath)
-                        .gte(min)
-                        .lte(max))));
+                postFilter.filter(f -> f.range(r -> r.number(n -> n.field(fieldPath).gte(min).lte(max))));
             } else {
                 double numValue = Double.parseDouble(value.trim());
                 postFilter.filter(f -> f.term(t -> t
@@ -238,149 +252,219 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
-    private void addFacetAggregations(NativeQueryBuilder nq, String category) {
-        nq.withAggregation(FIELD_BRAND, AggregationBuilders.terms(t -> t
-                .field(FIELD_BRAND)
-                .size(BRAND_FACET_SIZE)));
+    private void addAdvancedFacetAggregations(NativeQueryBuilder nq, SearchFilters filters, Map<String, Query> activeFiltersMap) {
+        Aggregation brandAgg = buildFilterAgg(FIELD_BRAND, FIELD_BRAND, BRAND_FACET_SIZE, activeFiltersMap, false);
+        nq.withAggregation(FIELD_BRAND, brandAgg);
 
-        attributeSchemaValidator.getAttributeDefinitions(category).values().stream()
+        Aggregation categoryAgg = buildFilterAgg(FIELD_CATEGORY, FIELD_CATEGORY, 5, activeFiltersMap, false);
+        nq.withAggregation(FIELD_CATEGORY, categoryAgg);
+
+        attributeSchemaValidator.getAttributeDefinitions(filters.getCategory()).values().stream()
                 .filter(AttributeDefinition::isFacetable)
                 .forEach(def -> {
                     String fieldPath = FIELD_SPECIFICATIONS + "." + def.getName() + KEYWORD_SUFFIX;
-                    Aggregation agg = buildFacetAggregation(fieldPath, def.getFacetStrategy());
+                    Aggregation agg = buildNestedFilterAggForStrategy(def.getName(), fieldPath, def.getFacetStrategy(), activeFiltersMap);
                     if (agg != null) {
                         nq.withAggregation(def.getName(), agg);
                     }
                 });
     }
 
-    private Aggregation buildFacetAggregation(String fieldPath, FacetStrategy strategy) {
-        return switch (strategy) {
-            case TERMS -> AggregationBuilders.terms(t -> t
-                    .field(fieldPath)
-                    .size(strategy.getDefaultSize()));
-            case SIGNIFICANT_TERMS -> AggregationBuilders.significantTerms(st -> st
-                    .field(fieldPath)
-                    .size(strategy.getDefaultSize()));
-            case SAMPLER -> AggregationBuilders.sampler(s -> s
-                    .shardSize(strategy.getSampleSize()));
-            case NONE -> null;
-        };
+    private Aggregation buildFilterAgg(String filterKeyToIgnore, String fieldTermToAggregate, int size, Map<String, Query> activeFiltersMap, boolean isPriceStats) {
+        BoolQuery.Builder filterBool = new BoolQuery.Builder();
+        
+        // Ignoramos especificamente el propio filtro para que las opciones hermanas no desaparezcan en el lado del frontend.
+        // Ej: si das click en "Marca = Samsung", el sidebar igual mostrara "LG" y "Sony" agregando un matchAll condicional.
+        activeFiltersMap.entrySet().stream()
+                .filter(entry -> !entry.getKey().equals(filterKeyToIgnore))
+                .forEach(entry -> filterBool.filter(entry.getValue()));
+
+        Query filterQuery = activeFiltersMap.size() <= (activeFiltersMap.containsKey(filterKeyToIgnore) ? 1 : 0)
+                ? Query.of(q -> q.matchAll(m -> m))
+                : Query.of(q -> q.bool(filterBool.build()));
+
+        if (isPriceStats) {
+             return Aggregation.of(a -> a
+                    .filter(filterQuery)
+                    .aggregations(AGG_MIN_PRICE, Aggregation.of(ia -> ia.min(m -> m.field(FIELD_PRICE))))
+                    .aggregations(AGG_MAX_PRICE, Aggregation.of(ia -> ia.max(m -> m.field(FIELD_PRICE))))
+            );
+        }
+
+        return Aggregation.of(a -> a
+                .filter(filterQuery)
+                .aggregations("filtered_terms", Aggregation.of(ia -> ia.terms(t -> t.field(fieldTermToAggregate).size(size))))
+        );
     }
 
-    private Map<String, List<FacetValue>> extractFacets(SearchHits<ProductDocument> searchHits,
-                                                        String category) {
-        Map<String, List<FacetValue>> facets = new HashMap<>();
+    private Aggregation buildNestedFilterAggForStrategy(String filterKeyToIgnore, String fieldPath, FacetStrategy strategy, Map<String, Query> activeFiltersMap) {
+        BoolQuery.Builder filterBool = new BoolQuery.Builder();
+        activeFiltersMap.entrySet().stream()
+                .filter(entry -> !entry.getKey().equals(filterKeyToIgnore))
+                .forEach(entry -> filterBool.filter(entry.getValue()));
+
+        Query filterQuery = activeFiltersMap.size() <= (activeFiltersMap.containsKey(filterKeyToIgnore) ? 1 : 0)
+                ? Query.of(q -> q.matchAll(m -> m))
+                : Query.of(q -> q.bool(filterBool.build()));
+
+        // Como los atributos dinamicos estan encapsulados dentro de una lista 'nested' llamada 'specifications',
+        // toca armar una agregacion tipo nested y evaluar la estrategia de agrupe (Terms, Sampler, etc) desde adentro.
+        Aggregation internalAgg;
+        switch (strategy) {
+            case TERMS -> internalAgg = Aggregation.of(a -> a.terms(t -> t.field(fieldPath).size(strategy.getDefaultSize())));
+            case SIGNIFICANT_TERMS -> internalAgg = Aggregation.of(a -> a.significantTerms(st -> st.field(fieldPath).size(strategy.getDefaultSize())));
+            case SAMPLER -> {
+                Aggregation sampledTerms = Aggregation.of(a -> a.terms(t -> t.field(fieldPath).size(strategy.getDefaultSize())));
+                internalAgg = Aggregation.of(a -> a.sampler(s -> s.shardSize(strategy.getSampleSize())).aggregations("sampled_terms", sampledTerms));
+            }
+            case NONE -> { return null; }
+            default -> { return null; }
+        }
+
+        return Aggregation.of(a -> a
+                .filter(filterQuery)
+                .aggregations("nested_aggs", Aggregation.of(na -> na
+                        .nested(n -> n.path(FIELD_SPECIFICATIONS))
+                        .aggregations("filtered_inner_agg", internalAgg)
+                ))
+        );
+    }
+
+    private Map<String, List<FacetValue>> extractFacets(SearchHits<ProductDocument> searchHits, String category) {
+        final Map<String, List<FacetValue>> facets = new HashMap<>();
 
         ElasticsearchAggregations agg = (ElasticsearchAggregations) searchHits.getAggregations();
         if (agg == null) return facets;
 
         try {
-            extractTermsFacet(agg, FIELD_BRAND, facets);
+            extractFilteredTermsFacet(agg, FIELD_BRAND, facets);
+            extractFilteredTermsFacet(agg, FIELD_CATEGORY, facets);
 
             attributeSchemaValidator.getAttributeDefinitions(category).values().stream()
                     .filter(AttributeDefinition::isFacetable)
-                    .forEach(def -> extractFacetByStrategy(agg, def.getName(), def.getFacetStrategy(), facets));
+                    .forEach(def -> extractNestedFilteredFacetStrategy(agg, def.getName(), facets));
+
+            Map<String, List<FacetValue>> finalFacets = facets;
+            if (!StringUtils.hasText(category)) {
+                // Si el usuario esta buscando "globalmente" sin ninguna categoria,
+                // vamos a calcular que especificaciones dinamicas son las mas repetidas y le devolvemos un top 5
+                // para evitar inundar la pantalla con 500 atributos inecesarios.
+                List<Map.Entry<String, List<FacetValue>>> sortedDynamicFacets = facets.entrySet().stream()
+                        .filter(e -> !e.getKey().equals(FIELD_BRAND) && !e.getKey().equals(FIELD_CATEGORY))
+                        .sorted((e1, e2) -> {
+                            long total1 = e1.getValue().stream().mapToLong(FacetValue::getCount).sum();
+                            long total2 = e2.getValue().stream().mapToLong(FacetValue::getCount).sum();
+                            return Long.compare(total2, total1);
+                        })
+                        .limit(5)
+                        .toList();
+
+                Map<String, List<FacetValue>> limitedFacets = new HashMap<>();
+                if (facets.containsKey(FIELD_BRAND)) limitedFacets.put(FIELD_BRAND, facets.get(FIELD_BRAND));
+                if (facets.containsKey(FIELD_CATEGORY)) limitedFacets.put(FIELD_CATEGORY, facets.get(FIELD_CATEGORY));
+
+                for (Map.Entry<String, List<FacetValue>> entry : sortedDynamicFacets) {
+                    limitedFacets.put(entry.getKey(), entry.getValue());
+                }
+                finalFacets = limitedFacets;
+            }
+                    
+            log.info("Extracted facets: {}", finalFacets);
+            return finalFacets;
         } catch (Exception e) {
             log.warn("Failed to extract facets: {}", e.getMessage());
         }
 
         return facets;
     }
-
-    private void extractFacetByStrategy(ElasticsearchAggregations agg, String facetName,
-                                        FacetStrategy strategy, Map<String, List<FacetValue>> facets) {
-        switch (strategy) {
-            case TERMS, SIGNIFICANT_TERMS -> extractTermsFacet(agg, facetName, facets);
-            case SAMPLER -> extractSamplerFacet(agg, facetName, facets);
-            case NONE -> {
-            }
-        }
-    }
-
-    private void extractTermsFacet(ElasticsearchAggregations agg, String facetName,
-                                   Map<String, List<FacetValue>> facets) {
+    
+    private void extractFilteredTermsFacet(ElasticsearchAggregations agg, String facetName, Map<String, List<FacetValue>> facets) {
         try {
-            Aggregate aggregate = getAggregate(agg, facetName);
-            if (aggregate == null) return;
+            Aggregate filterAggregate = agg.get(facetName) != null ? agg.get(facetName).aggregation().getAggregate() : null;
+            if (filterAggregate == null || !filterAggregate.isFilter()) return;
 
-            List<FacetValue> values = extractFacetValues(aggregate);
-            if (!values.isEmpty()) {
-                facets.put(facetName, values);
+            Aggregate innerAgg = filterAggregate.filter().aggregations().get("filtered_terms");
+            
+            if (innerAgg != null) {
+                List<FacetValue> values = extractBucketValues(innerAgg);
+                if (!values.isEmpty()) {
+                    facets.put(facetName, values);
+                }
             }
         } catch (Exception e) {
             log.debug("Failed to extract terms facet '{}': {}", facetName, e.getMessage());
         }
     }
 
-    private List<FacetValue> extractFacetValues(Aggregate aggregate) {
-        Stream<FacetValue> facetStream = null;
+    private void extractNestedFilteredFacetStrategy(ElasticsearchAggregations agg, String facetName, Map<String, List<FacetValue>> facets) {
+        try {
+            Aggregate filterAggregate = agg.get(facetName) != null ? agg.get(facetName).aggregation().getAggregate() : null;
+            if (filterAggregate == null || !filterAggregate.isFilter()) return;
 
-        if (aggregate.isSterms()) {
-            facetStream = aggregate.sterms().buckets().array().stream()
-                    .map(b -> new FacetValue(b.key().stringValue(), b.docCount()));
-        } else if (aggregate.isLterms()) {
-            facetStream = aggregate.lterms().buckets().array().stream()
-                    .map(b -> new FacetValue(String.valueOf(b.key()), b.docCount()));
-        } else if (aggregate.isDterms()) {
-            facetStream = aggregate.dterms().buckets().array().stream()
-                    .map(b -> new FacetValue(String.valueOf(b.key()), b.docCount()));
-        } else if (aggregate.isSigsterms()) {
-            facetStream = aggregate.sigsterms().buckets().array().stream()
-                    .map(b -> new FacetValue(b.key(), b.docCount()));
+            Aggregate nestedAgg = filterAggregate.filter().aggregations().get("nested_aggs");
+            if (nestedAgg == null || !nestedAgg.isNested()) return;
+
+            Aggregate innerAgg = nestedAgg.nested().aggregations().get("filtered_inner_agg");
+            if (innerAgg == null) return;
+
+            List<FacetValue> values;
+            if (innerAgg.isSampler()) {
+                Aggregate sampledTerms = innerAgg.sampler().aggregations().get("sampled_terms");
+                values = sampledTerms != null ? extractBucketValues(sampledTerms) : Collections.emptyList();
+            } else {
+                values = extractBucketValues(innerAgg);
+            }
+
+            if (!values.isEmpty()) {
+                facets.put(facetName, values);
+            }
+        } catch (Exception e) {
+            log.debug("Failed to extract nested strategy facet '{}': {}", facetName, e.getMessage());
         }
+    }
+
+    private List<FacetValue> extractBucketValues(Aggregate aggregate) {
+        // obtenemos los buckets mapeando dinamicamente segun la clase que trajo elasticsearch
+        Stream<FacetValue> facetStream = switch (aggregate._kind()) {
+            case Sterms -> aggregate.sterms().buckets().array().stream()
+                    .map(b -> new FacetValue(b.key().stringValue(), b.docCount()));
+            case Lterms -> aggregate.lterms().buckets().array().stream()
+                    .map(b -> new FacetValue(String.valueOf(b.key()), b.docCount()));
+            case Dterms -> aggregate.dterms().buckets().array().stream()
+                    .map(b -> new FacetValue(String.valueOf(b.key()), b.docCount()));
+            case Sigsterms -> aggregate.sigsterms().buckets().array().stream()
+                    .map(b -> new FacetValue(b.key(), b.docCount()));
+            default -> null;
+        };
 
         return facetStream != null
                 ? facetStream.filter(fv -> fv.getCount() > 0).toList()
                 : Collections.emptyList();
     }
 
-    private void extractSamplerFacet(ElasticsearchAggregations agg, String facetName,
-                                     Map<String, List<FacetValue>> facets) {
-        try {
-            Aggregate samplerAgg = getAggregate(agg, facetName);
-            if (samplerAgg == null || !samplerAgg.isSampler()) return;
-
-            Map<String, Aggregate> subAggs = samplerAgg.sampler().aggregations();
-            Aggregate termsAgg = subAggs.get("sampled_terms");
-
-            if (termsAgg != null && termsAgg.isSterms()) {
-                List<FacetValue> values = termsAgg.sterms().buckets().array().stream()
-                        .map(b -> new FacetValue(b.key().stringValue(), b.docCount()))
-                        .filter(fv -> fv.getCount() > 0)
-                        .toList();
-                if (!values.isEmpty()) {
-                    facets.put(facetName, values);
-                }
-            }
-        } catch (Exception e) {
-            log.debug("Failed to extract sampler facet '{}': {}", facetName, e.getMessage());
-        }
-    }
-
     private BigDecimal extractMinPrice(SearchHits<ProductDocument> searchHits) {
-        return extractAggregationValue(searchHits, AGG_MIN_PRICE, Aggregate::min);
+        return extractPriceStatsValue(searchHits, AGG_MIN_PRICE);
     }
 
     private BigDecimal extractMaxPrice(SearchHits<ProductDocument> searchHits) {
-        return extractAggregationValue(searchHits, AGG_MAX_PRICE, Aggregate::max);
+        return extractPriceStatsValue(searchHits, AGG_MAX_PRICE);
     }
 
-    private BigDecimal extractAggregationValue(SearchHits<ProductDocument> searchHits, String aggName,
-                                               Function<Aggregate, ?> extractor) {
+    private BigDecimal extractPriceStatsValue(SearchHits<ProductDocument> searchHits, String statName) {
         try {
             ElasticsearchAggregations aggs = (ElasticsearchAggregations) searchHits.getAggregations();
-            Aggregate aggregate = aggs.get(aggName).aggregation().getAggregate();
+            Aggregate statsAgg = aggs.get("price_stats").aggregation().getAggregate();
 
-            Double value = aggName.equals(AGG_MIN_PRICE)
-                    ? aggregate.min().value()
-                    : aggregate.max().value();
+            Double value = statName.equals(AGG_MIN_PRICE)
+                    ? statsAgg.filter().aggregations().get(AGG_MIN_PRICE).min().value()
+                    : statsAgg.filter().aggregations().get(AGG_MAX_PRICE).max().value();
 
-            return isValidDouble(value)
-                    ? BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP)
-                    : null;
+            if (value != null && !value.isNaN() && !value.isInfinite()) {
+                return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
+            }
+            return null;
         } catch (Exception e) {
-            log.warn("Failed to extract aggregation '{}': {}", aggName, e.getMessage());
+            log.debug("Failed to extract price stat '{}': {}", statName, e.getMessage());
             return null;
         }
     }
@@ -398,23 +482,7 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
-    private Aggregate getAggregate(ElasticsearchAggregations agg, String name) {
-        return agg.get(name) != null ? agg.get(name).aggregation().getAggregate() : null;
-    }
-
-    private boolean hasFilters(BoolQuery query) {
-        return !query.filter().isEmpty();
-    }
-
-    private boolean isNotBlank(String value) {
-        return value != null && !value.trim().isEmpty();
-    }
-
     private boolean isValidPrice(BigDecimal price) {
         return price != null && price.compareTo(BigDecimal.ZERO) > 0;
-    }
-
-    private boolean isValidDouble(Double value) {
-        return value != null && !value.isNaN() && !value.isInfinite();
     }
 }

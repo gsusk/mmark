@@ -16,15 +16,13 @@ public class AttributeSchemaValidator {
 
     private final CategoryRepository categoryRepository;
     
-    private final Map<String, Set<String>> categoryAttributesCache = new ConcurrentHashMap<>();
-    private final Map<String, Set<String>> facetableAttributesCache = new ConcurrentHashMap<>();
     private final Map<String, Set<String>> filterableAttributesCache = new ConcurrentHashMap<>();
     
     private final Map<String, Map<String, AttributeDefinition>> attributeDefinitionsCache = new ConcurrentHashMap<>();
     
-    private final Set<String> globalAttributesCache = new HashSet<>();
-    private final Set<String> globalFacetableAttributesCache = new HashSet<>();
     private final Set<String> globalFilterableAttributesCache = new HashSet<>();
+
+    private final Map<String, AttributeDefinition> globalAttributeDefinitionsCache = new ConcurrentHashMap<>();
 
     public AttributeSchemaValidator(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
@@ -32,14 +30,15 @@ public class AttributeSchemaValidator {
 
     @EventListener(ApplicationReadyEvent.class)
     public void loadSchema() {
+        // Cargamos todos los atributos globalmente en memoria la primera vez que arranca Spring Boot.
+        // Esto es re importante para no destrozar la base de datos con peticiones cada vez
+        // que alguien cambie los filtros del frontend o cree un producto.
         log.info("loading attribute schema into memry..");
         List<Category> allCategories = categoryRepository.findAll();
 
         for (Category category : allCategories) {
             String categoryKey = category.getName().toLowerCase();
             
-            Set<String> attributes = new HashSet<>();
-            Set<String> facetableAttributes = new HashSet<>();
             Set<String> filterableAttributes = new HashSet<>();
             Map<String, AttributeDefinition> definitions = new HashMap<>();
             
@@ -51,12 +50,7 @@ public class AttributeSchemaValidator {
                         AttributeDefinition def = AttributeDefinition.fromMap(defMap);
                         String attrName = def.getName();
                         
-                        attributes.add(attrName);
                         definitions.put(attrName, def);
-                        
-                        if (def.isFacetable()) {
-                            facetableAttributes.add(attrName);
-                        }
                         
                         if (def.isFilterable()) {
                             filterableAttributes.add(attrName);
@@ -68,35 +62,18 @@ public class AttributeSchemaValidator {
                 }
             }
 
-            categoryAttributesCache.put(categoryKey, attributes);
-            facetableAttributesCache.put(categoryKey, facetableAttributes);
             filterableAttributesCache.put(categoryKey, filterableAttributes);
             attributeDefinitionsCache.put(categoryKey, definitions);
-            globalAttributesCache.addAll(attributes);
-            globalFacetableAttributesCache.addAll(facetableAttributes);
+            globalAttributeDefinitionsCache.putAll(definitions);
             globalFilterableAttributesCache.addAll(filterableAttributes);
         }
         
-        log.info("Loaded schema for {} categories with {} total unique attributes ({} filterable, {} facetable).",
-                categoryAttributesCache.size(), 
-                globalAttributesCache.size(),
-                globalFilterableAttributesCache.size(),
-                globalFacetableAttributesCache.size());
+        log.info("Loaded schema for {} categories with {} total unique filterable attributes.",
+                attributeDefinitionsCache.size(), 
+                globalFilterableAttributesCache.size());
     }
 
-    public Set<String> getAllowedAttributes(String categoryName) {
-        if (categoryName == null) {
-            return globalAttributesCache;
-        }
-        return categoryAttributesCache.getOrDefault(categoryName.toLowerCase(), globalAttributesCache);
-    }
 
-    public Set<String> getFacetableAttributes(String categoryName) {
-        if (categoryName == null) {
-            return globalFacetableAttributesCache;
-        }
-        return facetableAttributesCache.getOrDefault(categoryName.toLowerCase(), globalFacetableAttributesCache);
-    }
 
     public Set<String> getFilterableAttributes(String categoryName) {
         if (categoryName == null) {
@@ -106,8 +83,12 @@ public class AttributeSchemaValidator {
     }
 
     public Optional<AttributeDefinition> getAttributeDefinition(String categoryName, String attributeName) {
-        if (categoryName == null || attributeName == null) {
+        if (attributeName == null) {
             return Optional.empty();
+        }
+
+        if (categoryName == null) {
+             return Optional.ofNullable(globalAttributeDefinitionsCache.get(attributeName));
         }
         
         Map<String, AttributeDefinition> categoryDefs = attributeDefinitionsCache.get(categoryName.toLowerCase());
@@ -120,15 +101,9 @@ public class AttributeSchemaValidator {
 
     public Map<String, AttributeDefinition> getAttributeDefinitions(String categoryName) {
         if (categoryName == null) {
-            return Collections.emptyMap();
+            return globalAttributeDefinitionsCache;
         }
         return attributeDefinitionsCache.getOrDefault(categoryName.toLowerCase(), Collections.emptyMap());
-    }
-
-    public FacetStrategy getFacetStrategy(String categoryName, String attributeName) {
-        return getAttributeDefinition(categoryName, attributeName)
-                .map(AttributeDefinition::getFacetStrategy)
-                .orElse(FacetStrategy.NONE);
     }
 
     public FilterType getFilterType(String categoryName, String attributeName) {

@@ -1,0 +1,36 @@
+{
+  "marca": [
+    {
+      "value": "LG",
+      "count": 1
+    },
+    {
+      "value": "Samsung",
+      "count": 1
+    },
+    {
+      "value": "Sony",
+      "count": 1
+    }
+  ],
+  "resolucion": [
+    {
+      "value": "4K",
+      "count": 3
+    }
+  ],
+  "brand": [
+    {
+      "value": "LG",
+      "count": 1
+    },
+    {
+      "value": "Samsung",
+      "count": 1
+    },
+    {
+      "value": "Sony",
+      "count": 1
+    }
+  ]
+}

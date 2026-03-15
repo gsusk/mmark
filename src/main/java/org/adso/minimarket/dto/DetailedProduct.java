@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -27,4 +28,5 @@ public class DetailedProduct {
     private List<String> images = new ArrayList<>();
     @JsonProperty(value = "listedAt")
     private LocalDateTime createdAt;
+    private Map<String, Object> attributes;
 }
