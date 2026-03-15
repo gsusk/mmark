@@ -3,9 +3,9 @@ package org.adso.minimarket.service;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
-import co.elastic.clients.elasticsearch._types.aggregations.AggregationBuilders;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import lombok.extern.slf4j.Slf4j;
 import org.adso.minimarket.dto.FacetValue;
@@ -29,7 +29,6 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -88,7 +87,7 @@ public class SearchServiceImpl implements SearchService {
     private NativeQuery buildQuery(SearchFilters filters, String query) {
         Query baseQuery = buildBaseQuery(filters.getCategory(), query);
         Map<String, Query> filterMap = buildFilterMap(filters);
-        
+
         NativeQueryBuilder nqBuilder = NativeQuery.builder()
                 .withQuery(baseQuery)
                 .withMaxResults(MAX_RESULTS);
@@ -112,7 +111,7 @@ public class SearchServiceImpl implements SearchService {
 
     private Query buildBaseQuery(String category, String queryStr) {
         BoolQuery.Builder base = new BoolQuery.Builder();
-        
+
         if (StringUtils.hasText(queryStr)) {
             base.must(mu -> mu.bool(b -> b
                     .should(s -> s.multiMatch(m -> m
@@ -145,7 +144,8 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if (StringUtils.hasText(filters.getBrand())) {
-             filterMap.put(FIELD_BRAND, Query.of(q -> q.term(t -> t.field(FIELD_BRAND).value(filters.getBrand()).caseInsensitive(true))));
+            filterMap.put(FIELD_BRAND,
+                    Query.of(q -> q.term(t -> t.field(FIELD_BRAND).value(filters.getBrand()).caseInsensitive(true))));
         }
 
         if (filters.getAttributes() != null) {
@@ -164,8 +164,8 @@ public class SearchServiceImpl implements SearchService {
         return filterMap;
     }
 
-    private co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery buildPriceQuery(SearchFilters filters) {
-        return co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery.of(r -> {
+    private RangeQuery buildPriceQuery(SearchFilters filters) {
+        return RangeQuery.of(r -> {
             r.number(n -> {
                 n.field(FIELD_PRICE);
                 if (isValidPrice(filters.getMinPrice())) {
@@ -189,9 +189,11 @@ public class SearchServiceImpl implements SearchService {
             case MULTI_SELECT -> applyMultiSelectFilter(innerBq, fieldPath, attrValue);
             case BOOLEAN -> applyBooleanFilter(innerBq, fieldPath, attrValue);
             case RANGE -> applyRangeFilter(innerBq, fieldPath, attrValue, attrName);
-            default -> { return null; }
+            default -> {
+                return null;
+            }
         }
-        
+
         List<Query> innerFilters = innerBq.build().filter();
         if (innerFilters.isEmpty()) return null;
 
@@ -252,7 +254,8 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
-    private void addAdvancedFacetAggregations(NativeQueryBuilder nq, SearchFilters filters, Map<String, Query> activeFiltersMap) {
+    private void addAdvancedFacetAggregations(NativeQueryBuilder nq, SearchFilters filters,
+                                              Map<String, Query> activeFiltersMap) {
         Aggregation brandAgg = buildFilterAgg(FIELD_BRAND, FIELD_BRAND, BRAND_FACET_SIZE, activeFiltersMap, false);
         nq.withAggregation(FIELD_BRAND, brandAgg);
 
@@ -263,18 +266,22 @@ public class SearchServiceImpl implements SearchService {
                 .filter(AttributeDefinition::isFacetable)
                 .forEach(def -> {
                     String fieldPath = FIELD_SPECIFICATIONS + "." + def.getName() + KEYWORD_SUFFIX;
-                    Aggregation agg = buildNestedFilterAggForStrategy(def.getName(), fieldPath, def.getFacetStrategy(), activeFiltersMap);
+                    Aggregation agg = buildNestedFilterAggForStrategy(def.getName(), fieldPath,
+                            def.getFacetStrategy(), activeFiltersMap);
                     if (agg != null) {
                         nq.withAggregation(def.getName(), agg);
                     }
                 });
     }
 
-    private Aggregation buildFilterAgg(String filterKeyToIgnore, String fieldTermToAggregate, int size, Map<String, Query> activeFiltersMap, boolean isPriceStats) {
+    private Aggregation buildFilterAgg(String filterKeyToIgnore, String fieldTermToAggregate, int size, Map<String,
+            Query> activeFiltersMap, boolean isPriceStats) {
         BoolQuery.Builder filterBool = new BoolQuery.Builder();
-        
-        // Ignoramos especificamente el propio filtro para que las opciones hermanas no desaparezcan en el lado del frontend.
-        // Ej: si das click en "Marca = Samsung", el sidebar igual mostrara "LG" y "Sony" agregando un matchAll condicional.
+
+        // Ignoramos especificamente el propio filtro para que las opciones hermanas no desaparezcan en el lado del
+        // frontend.
+        // Ej: si das click en "Marca = Samsung", el sidebar igual mostrara "LG" y "Sony" agregando un matchAll
+        // condicional.
         activeFiltersMap.entrySet().stream()
                 .filter(entry -> !entry.getKey().equals(filterKeyToIgnore))
                 .forEach(entry -> filterBool.filter(entry.getValue()));
@@ -284,7 +291,7 @@ public class SearchServiceImpl implements SearchService {
                 : Query.of(q -> q.bool(filterBool.build()));
 
         if (isPriceStats) {
-             return Aggregation.of(a -> a
+            return Aggregation.of(a -> a
                     .filter(filterQuery)
                     .aggregations(AGG_MIN_PRICE, Aggregation.of(ia -> ia.min(m -> m.field(FIELD_PRICE))))
                     .aggregations(AGG_MAX_PRICE, Aggregation.of(ia -> ia.max(m -> m.field(FIELD_PRICE))))
@@ -293,11 +300,13 @@ public class SearchServiceImpl implements SearchService {
 
         return Aggregation.of(a -> a
                 .filter(filterQuery)
-                .aggregations("filtered_terms", Aggregation.of(ia -> ia.terms(t -> t.field(fieldTermToAggregate).size(size))))
+                .aggregations("filtered_terms",
+                        Aggregation.of(ia -> ia.terms(t -> t.field(fieldTermToAggregate).size(size))))
         );
     }
 
-    private Aggregation buildNestedFilterAggForStrategy(String filterKeyToIgnore, String fieldPath, FacetStrategy strategy, Map<String, Query> activeFiltersMap) {
+    private Aggregation buildNestedFilterAggForStrategy(String filterKeyToIgnore, String fieldPath,
+                                                        FacetStrategy strategy, Map<String, Query> activeFiltersMap) {
         BoolQuery.Builder filterBool = new BoolQuery.Builder();
         activeFiltersMap.entrySet().stream()
                 .filter(entry -> !entry.getKey().equals(filterKeyToIgnore))
@@ -311,14 +320,19 @@ public class SearchServiceImpl implements SearchService {
         // toca armar una agregacion tipo nested y evaluar la estrategia de agrupe (Terms, Sampler, etc) desde adentro.
         Aggregation internalAgg;
         switch (strategy) {
-            case TERMS -> internalAgg = Aggregation.of(a -> a.terms(t -> t.field(fieldPath).size(strategy.getDefaultSize())));
-            case SIGNIFICANT_TERMS -> internalAgg = Aggregation.of(a -> a.significantTerms(st -> st.field(fieldPath).size(strategy.getDefaultSize())));
+            case TERMS ->
+                    internalAgg = Aggregation.of(a -> a.terms(t -> t.field(fieldPath).size(strategy.getDefaultSize())));
+            case SIGNIFICANT_TERMS -> internalAgg =
+                    Aggregation.of(a -> a.significantTerms(st -> st.field(fieldPath).size(strategy.getDefaultSize())));
             case SAMPLER -> {
-                Aggregation sampledTerms = Aggregation.of(a -> a.terms(t -> t.field(fieldPath).size(strategy.getDefaultSize())));
-                internalAgg = Aggregation.of(a -> a.sampler(s -> s.shardSize(strategy.getSampleSize())).aggregations("sampled_terms", sampledTerms));
+                Aggregation sampledTerms =
+                        Aggregation.of(a -> a.terms(t -> t.field(fieldPath).size(strategy.getDefaultSize())));
+                internalAgg = Aggregation.of(a -> a.sampler(s -> s.shardSize(strategy.getSampleSize())).aggregations(
+                        "sampled_terms", sampledTerms));
             }
-            case NONE -> { return null; }
-            default -> { return null; }
+            default -> {
+                return null;
+            }
         }
 
         return Aggregation.of(a -> a
@@ -348,7 +362,6 @@ public class SearchServiceImpl implements SearchService {
             if (!StringUtils.hasText(category)) {
                 // Si el usuario esta buscando "globalmente" sin ninguna categoria,
                 // vamos a calcular que especificaciones dinamicas son las mas repetidas y le devolvemos un top 5
-                // para evitar inundar la pantalla con 500 atributos inecesarios.
                 List<Map.Entry<String, List<FacetValue>>> sortedDynamicFacets = facets.entrySet().stream()
                         .filter(e -> !e.getKey().equals(FIELD_BRAND) && !e.getKey().equals(FIELD_CATEGORY))
                         .sorted((e1, e2) -> {
@@ -368,7 +381,7 @@ public class SearchServiceImpl implements SearchService {
                 }
                 finalFacets = limitedFacets;
             }
-                    
+
             log.info("Extracted facets: {}", finalFacets);
             return finalFacets;
         } catch (Exception e) {
@@ -377,14 +390,16 @@ public class SearchServiceImpl implements SearchService {
 
         return facets;
     }
-    
-    private void extractFilteredTermsFacet(ElasticsearchAggregations agg, String facetName, Map<String, List<FacetValue>> facets) {
+
+    private void extractFilteredTermsFacet(ElasticsearchAggregations agg, String facetName, Map<String,
+            List<FacetValue>> facets) {
         try {
-            Aggregate filterAggregate = agg.get(facetName) != null ? agg.get(facetName).aggregation().getAggregate() : null;
+            Aggregate filterAggregate = agg.get(facetName) != null ? agg.get(facetName).aggregation().getAggregate()
+                    : null;
             if (filterAggregate == null || !filterAggregate.isFilter()) return;
 
             Aggregate innerAgg = filterAggregate.filter().aggregations().get("filtered_terms");
-            
+
             if (innerAgg != null) {
                 List<FacetValue> values = extractBucketValues(innerAgg);
                 if (!values.isEmpty()) {
@@ -396,9 +411,11 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
-    private void extractNestedFilteredFacetStrategy(ElasticsearchAggregations agg, String facetName, Map<String, List<FacetValue>> facets) {
+    private void extractNestedFilteredFacetStrategy(ElasticsearchAggregations agg, String facetName, Map<String,
+            List<FacetValue>> facets) {
         try {
-            Aggregate filterAggregate = agg.get(facetName) != null ? agg.get(facetName).aggregation().getAggregate() : null;
+            Aggregate filterAggregate = agg.get(facetName) != null ? agg.get(facetName).aggregation().getAggregate()
+                    : null;
             if (filterAggregate == null || !filterAggregate.isFilter()) return;
 
             Aggregate nestedAgg = filterAggregate.filter().aggregations().get("nested_aggs");
