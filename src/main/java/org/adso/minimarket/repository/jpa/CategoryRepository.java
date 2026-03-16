@@ -11,5 +11,7 @@ import java.util.Optional;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     Optional<Category> findById(Long id);
 
+    Optional<Category> findByNameIgnoreCase(String name);
+
     List<Category> findTop4ByOrderByIdAsc();
 }

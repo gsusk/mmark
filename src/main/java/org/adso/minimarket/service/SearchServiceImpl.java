@@ -95,7 +95,7 @@ public class SearchServiceImpl implements SearchService {
         if (!filterMap.isEmpty()) {
             // Aplicamos los filtros DESPUES de la busqueda global usando un post-filter.
             // Asi las estadisticas como min_price/max_price o los facets de categorias se pueden 
-            // calcular de manera correcta sin ser mutilados por el propio filtro (e.g no achicar el slider de precio).
+            // calcular de manera correcta sin ser removidos por el propio filtro (no achicar el slider de precio).
             BoolQuery.Builder postFilterBool = new BoolQuery.Builder();
             filterMap.values().forEach(postFilterBool::filter);
             nqBuilder.withFilter(Query.of(q -> q.bool(postFilterBool.build())));
@@ -127,10 +127,11 @@ public class SearchServiceImpl implements SearchService {
         }
 
         if (StringUtils.hasText(category)) {
-            base.filter(f -> f.term(t -> t
+            List<String> categoriesToSearch = attributeSchemaValidator.getAllDescendantNames(category);
+
+            base.filter(f -> f.terms(t -> t
                     .field(FIELD_CATEGORY)
-                    .value(category)
-                    .caseInsensitive(true)));
+                    .terms(ts -> ts.value(categoriesToSearch.stream().map(FieldValue::of).toList()))));
         }
 
         return base.build()._toQuery();
@@ -495,7 +496,7 @@ public class SearchServiceImpl implements SearchService {
         filters.getAttributes().keySet().retainAll(filterableAttributes);
 
         if (filters.getAttributes().isEmpty()) {
-            log.debug("All attribute filters were invalid for category: {}", filters.getCategory());
+            log.debug("todos loa atributos son invalidos: {}", filters.getCategory());
         }
     }
 
