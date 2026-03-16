@@ -62,7 +62,7 @@ public class AttributeSchemaValidator {
         }
 
         //la idea es que las llamadas para una categoria llame a las categorias
-        //hijas
+        //hijas una sola vez
         for (Category category : allCategories) {
             String categoryName = category.getName().toLowerCase();
             categoryHierarchyCache.put(categoryName, getAllNamesRecursive(category));
@@ -135,6 +135,7 @@ public class AttributeSchemaValidator {
 
     public List<String> getAllDescendantNames(String categoryName) {
         if (categoryName == null) return Collections.emptyList();
+        // Si no la conocemos por algun motivo, devolvemos al menos la categoria original como fallback
         return categoryHierarchyCache.getOrDefault(categoryName.toLowerCase(), List.of(categoryName));
     }
 }

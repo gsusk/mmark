@@ -65,7 +65,7 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public SearchResult searchWithFilters(SearchFilters filters, String query) {
-        sanitizeFilters(filters);
+        sanitizeFilters(filters); // limpiamos lo que no pertenece a esta categoria
         NativeQuery searchQuery = buildQuery(filters, query);
         SearchHits<ProductDocument> searchHits = operations.search(searchQuery, ProductDocument.class);
 
@@ -115,18 +115,20 @@ public class SearchServiceImpl implements SearchService {
         if (StringUtils.hasText(queryStr)) {
             base.must(mu -> mu.bool(b -> b
                     .should(s -> s.multiMatch(m -> m
+                            // Le damos mas peso al nombre (^3) que a la descripcion para que los resultados se relacionen mas
                             .fields(FIELD_NAME + "^3", FIELD_DESCRIPTION + "^1")
                             .query(queryStr)
                             .fuzziness(FUZZINESS_AUTO)
                             .type(TextQueryType.BestFields)))
                     .should(s -> s.prefix(p -> p
                             .field(FIELD_NAME)
-                            .value(queryStr.toLowerCase())))));
+                            .value(queryStr.toLowerCase()))))); // para usar si el primer should no encuentra nada
         } else {
             base.must(m -> m.matchAll(a -> a));
         }
 
         if (StringUtils.hasText(category)) {
+            // buscamos todas las subcategorias hijas para que el padre devuelva todo lo que tenga abajo
             List<String> categoriesToSearch = attributeSchemaValidator.getAllDescendantNames(category);
 
             base.filter(f -> f.terms(t -> t
@@ -155,6 +157,7 @@ public class SearchServiceImpl implements SearchService {
                     .forEach(entry -> {
                         String attrName = entry.getKey();
                         FilterType type = attributeSchemaValidator.getFilterType(filters.getCategory(), attrName);
+                        // Armamos el filtro con los campos anidados
                         Query attrQuery = buildNestedAttributeQuery(attrName, entry.getValue(), type);
                         if (attrQuery != null) {
                             filterMap.put(attrName, attrQuery);
@@ -292,6 +295,7 @@ public class SearchServiceImpl implements SearchService {
                 : Query.of(q -> q.bool(filterBool.build()));
 
         if (isPriceStats) {
+            // Esto nos da el min y max del slider de precio sin que se corte solo
             return Aggregation.of(a -> a
                     .filter(filterQuery)
                     .aggregations(AGG_MIN_PRICE, Aggregation.of(ia -> ia.min(m -> m.field(FIELD_PRICE))))
@@ -361,7 +365,7 @@ public class SearchServiceImpl implements SearchService {
 
             Map<String, List<FacetValue>> finalFacets = facets;
             if (!StringUtils.hasText(category)) {
-                // Si el usuario esta buscando "globalmente" sin ninguna categoria,
+                // Si el usuario esta buscando globalmente sin ninguna categoria,
                 // vamos a calcular que especificaciones dinamicas son las mas repetidas y le devolvemos un top 5
                 List<Map.Entry<String, List<FacetValue>>> sortedDynamicFacets = facets.entrySet().stream()
                         .filter(e -> !e.getKey().equals(FIELD_BRAND) && !e.getKey().equals(FIELD_CATEGORY))
@@ -442,7 +446,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private List<FacetValue> extractBucketValues(Aggregate aggregate) {
-        // obtenemos los buckets mapeando dinamicamente segun la clase que trajo elasticsearch
+        // Obtenemos los buckets mapeando dinamicamente segun la clase que trajo elasticsearch (pueden ser strings, nros, etc)
         Stream<FacetValue> facetStream = switch (aggregate._kind()) {
             case Sterms -> aggregate.sterms().buckets().array().stream()
                     .map(b -> new FacetValue(b.key().stringValue(), b.docCount()));
