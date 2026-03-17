@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface OrderService {
     OrderDetails placeOrder(User user);
+
     OrderSummary getOrderById(UUID orderId, Long userId);
+
     List<OrderSummary> getUserOrders(Long userId);
 }

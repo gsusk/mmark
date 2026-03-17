@@ -50,6 +50,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .currency(payment.getCurrency())
                 .amount(payment.getAmount())
                 .status(payment.getStatus().name().toLowerCase())
+                .orderId(order.getId())
                 .build();
     }
 
@@ -67,6 +68,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .currency(payment.getCurrency())
                 .amount(payment.getAmount())
                 .status(payment.getStatus().name().toLowerCase())
+                .orderId(payment.getOrder().getId())
                 .build();
     }
 }
