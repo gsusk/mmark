@@ -8,6 +8,7 @@ import org.adso.minimarket.exception.OrderInsufficientStockException;
 import org.adso.minimarket.mappers.OrderMapper;
 import org.adso.minimarket.models.cart.Cart;
 import org.adso.minimarket.models.cart.CartItem;
+import org.adso.minimarket.models.cart.CartStatus;
 import org.adso.minimarket.models.order.Order;
 import org.adso.minimarket.models.order.OrderItem;
 import org.adso.minimarket.models.order.OrderStatus;
@@ -116,6 +117,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         cart.getCartItems().clear();
+        cart.setStatus(CartStatus.COMPLETE);
         order.setTotalAmount(total);
         order.setStatus(OrderStatus.PENDING);
         return orderRepository.save(order);
