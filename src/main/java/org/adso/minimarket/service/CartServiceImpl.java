@@ -59,11 +59,11 @@ public class CartServiceImpl implements CartService {
     @Override
     @Transactional
     public void mergeCarts(Long userId, UUID guestId) {
-        Cart guestCart = cartRepository.findCartByGuestIdAndStatus(guestId, CartStatus.ACTIVE).orElse(null);
+        Cart guestCart = cartRepository.findCartWithProductsByGuestIdAndStatus(guestId, CartStatus.ACTIVE).orElse(null);
 
         if (guestCart == null) return;
 
-        Cart userCart = cartRepository.findCartByUserIdAndStatus(userId, CartStatus.ACTIVE).orElseGet(
+        Cart userCart = cartRepository.findCartWithProductsByUserIdAndStatus(userId, CartStatus.ACTIVE).orElseGet(
                 () -> this.createCart(userId)
         );
 
@@ -168,7 +168,9 @@ public class CartServiceImpl implements CartService {
             cart.getCartItems().remove(cartItem);
         } else {
             if (cartItem.getProduct().getStock() < quantity) {
-                throw new OrderInsufficientStockException("Stock insuficiente: " + cartItem.getProduct().getName() + ".");
+                throw new OrderInsufficientStockException(
+                        "Stock insuficiente: " + cartItem.getProduct().getName() + "."
+                );
             }
             cartItem.setQuantity(quantity);
         }
