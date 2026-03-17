@@ -16,8 +16,11 @@ import org.adso.minimarket.repository.jpa.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class CartServiceImpl implements CartService {
@@ -57,17 +60,24 @@ public class CartServiceImpl implements CartService {
     @Transactional
     public void mergeCarts(Long userId, UUID guestId) {
         Cart guestCart = cartRepository.findCartByGuestIdAndStatus(guestId, CartStatus.ACTIVE).orElse(null);
+
+        if (guestCart == null) return;
+
         Cart userCart = cartRepository.findCartByUserIdAndStatus(userId, CartStatus.ACTIVE).orElseGet(
                 () -> this.createCart(userId)
         );
 
-        if (guestCart == null) return;
+        Map<Long, CartItem> userItems = userCart.getCartItems()
+                .stream()
+                .collect(
+                        Collectors.toMap(ci -> ci.getProduct().getId(), Function.identity())
+                );
 
         for (CartItem guestItem : guestCart.getCartItems()) {
-            Optional<CartItem> repeatedItem = findCartItemByProductId(userCart, guestItem.getProduct().getId());
-
-            if (repeatedItem.isPresent()) {
-                repeatedItem.get().addToQuantity(guestItem.getQuantity());
+            Long productId = guestItem.getProduct().getId();
+            CartItem existing = userItems.get(productId);
+            if (existing != null) {
+                existing.addToQuantity(guestItem.getQuantity());
             } else {
                 CartItem newItem = new CartItem(userCart, guestItem.getProduct(), guestItem.getQuantity());
                 userCart.getCartItems().add(newItem);
@@ -113,14 +123,14 @@ public class CartServiceImpl implements CartService {
         Product product = productService.getById(item.getProductId());
 
         if (product.getStock() < item.getQuantity()) {
-             throw new OrderInsufficientStockException("Not enough stock for product: " + product.getName() + ". Available: " + product.getStock() + ", Requested: " + item.getQuantity());
+            throw new OrderInsufficientStockException("Stock insuficiente: " + product.getName() + ".");
         }
 
         Optional<CartItem> repeated = this.findCartItemByProductId(cart, product.getId());
 
         if (repeated.isPresent()) {
             if (product.getStock() < repeated.get().getQuantity() + item.getQuantity()) {
-                throw new OrderInsufficientStockException("Not enough stock for product: " + product.getName() + ". Available: " + product.getStock() + ", Requested total: " + (repeated.get().getQuantity() + item.getQuantity()));
+                throw new OrderInsufficientStockException("Stock insuficiente" + product.getName() + ".");
             }
             repeated.get().addToQuantity(item.getQuantity());
         } else {
@@ -158,7 +168,7 @@ public class CartServiceImpl implements CartService {
             cart.getCartItems().remove(cartItem);
         } else {
             if (cartItem.getProduct().getStock() < quantity) {
-                throw new OrderInsufficientStockException("Not enough stock for product: " + cartItem.getProduct().getName() + ". Available: " + cartItem.getProduct().getStock() + ", Requested: " + quantity);
+                throw new OrderInsufficientStockException("Stock insuficiente: " + cartItem.getProduct().getName() + ".");
             }
             cartItem.setQuantity(quantity);
         }
