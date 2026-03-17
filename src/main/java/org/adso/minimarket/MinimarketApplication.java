@@ -2,15 +2,10 @@ package org.adso.minimarket;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
-/**
- * TODO:
- *  - Seguimiento de inventario
- *  - Lockout carrito
- *  - Validacion de JSON para variantes del producto
- *
- */
 @SpringBootApplication
+@EnableScheduling
 public class MinimarketApplication {
     public static void main(String[] args) {
         SpringApplication.run(MinimarketApplication.class, args);
