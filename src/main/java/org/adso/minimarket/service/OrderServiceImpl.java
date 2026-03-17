@@ -1,5 +1,6 @@
 package org.adso.minimarket.service;
 
+import org.adso.minimarket.dto.CheckoutRequest;
 import org.adso.minimarket.dto.OrderDetails;
 import org.adso.minimarket.dto.OrderSummary;
 import org.adso.minimarket.exception.BadRequestException;
@@ -9,6 +10,7 @@ import org.adso.minimarket.mappers.OrderMapper;
 import org.adso.minimarket.models.cart.Cart;
 import org.adso.minimarket.models.cart.CartItem;
 import org.adso.minimarket.models.cart.CartStatus;
+import org.adso.minimarket.models.inventory.TransactionType;
 import org.adso.minimarket.models.order.Order;
 import org.adso.minimarket.models.order.OrderItem;
 import org.adso.minimarket.models.order.OrderStatus;
@@ -48,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDetails placeOrder(User user, org.adso.minimarket.dto.CheckoutRequest checkoutRequest) {
+    public OrderDetails placeOrder(User user, CheckoutRequest checkoutRequest) {
         Order order = createOrder(user, checkoutRequest);
         return orderMapper.toOrderDetailsDto(order);
     }
@@ -56,7 +58,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderSummary getOrderById(UUID orderId, Long userId) {
         Order order = orderRepository.findOrderByIdAndUserId(orderId, userId)
-                .orElseThrow(() -> new NotFoundException("Order not found"));
+                .orElseThrow(() -> new NotFoundException("Orden no encontrada"));
         return orderMapper.toOrderSummaryDto(order);
     }
 
@@ -69,7 +71,7 @@ public class OrderServiceImpl implements OrderService {
     private Order createOrder(User user, CheckoutRequest shippingInfo) {
         Cart cart = cartService.getCart(user.getId(), null);
         if (cart.getCartItems().isEmpty()) {
-            throw new BadRequestException("Invalid order: Cart empty");
+            throw new BadRequestException("Orden invalida: El carrito esta vacio");
         }
 
         Order order = new Order();
@@ -98,12 +100,11 @@ public class OrderServiceImpl implements OrderService {
             Product product = productMap.get(ci.getProduct().getId());
 
             if (product.getStock() < ci.getQuantity()) {
-                throw new OrderInsufficientStockException("Not enough stock for product: " + product.getName() + ". " +
-                        "Available: " + product.getStock() + ", Requested: " + ci.getQuantity());
+                throw new OrderInsufficientStockException("Stock insuficiente: " + product.getName() + ".");
             }
 
             inventoryService.adjustStock(product.getId(), -ci.getQuantity(),
-                    org.adso.minimarket.models.inventory.TransactionType.SALE,
+                    TransactionType.SALE,
                     "Order placed: " + order.getId());
 
             OrderItem orderItem = new OrderItem();

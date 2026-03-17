@@ -1,5 +1,6 @@
 package org.adso.minimarket.mappers;
 
+import org.adso.minimarket.dto.OrderDetails;
 import org.adso.minimarket.dto.OrderItemSummary;
 import org.adso.minimarket.dto.OrderSummary;
 import org.adso.minimarket.models.order.Order;
