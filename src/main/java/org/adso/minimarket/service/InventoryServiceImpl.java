@@ -26,7 +26,7 @@ public class InventoryServiceImpl implements InventoryService {
     @Override
     @Transactional
     public void adjustStock(Long productId, int quantity, TransactionType type, String reason) {
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findForUpdateById(productId)
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
         int newStock = product.getStock() + quantity;

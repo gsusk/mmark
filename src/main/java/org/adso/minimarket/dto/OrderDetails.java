@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -19,5 +20,6 @@ public class OrderDetails {
     private Long userId;
     private String status;
     private BigDecimal total;
+    private List<OrderItemSummary> items;
     private LocalDateTime createdAt;
 }

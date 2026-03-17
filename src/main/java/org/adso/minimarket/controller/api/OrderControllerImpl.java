@@ -30,7 +30,7 @@ public class OrderControllerImpl implements OrderController {
     public ResponseEntity<OrderDetails> placeOrder(
             @AuthenticationPrincipal UserPrincipal principal) {
 
-        OrderDetails orderDetails = orderService.placeOrder(principal.getUser());
+        OrderDetails orderDetails = orderService.placeOrder(principal.getUser(), null);
         return ResponseEntity.ok(orderDetails);
     }
 

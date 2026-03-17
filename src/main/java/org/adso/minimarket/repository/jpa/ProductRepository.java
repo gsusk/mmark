@@ -20,6 +20,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths = {"category", "images"})
     Optional<Product> findDetailedById(Long id);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Product> findForUpdateById(Long id);
+
     Product getById(Long id);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

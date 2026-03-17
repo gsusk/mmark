@@ -43,6 +43,9 @@ public class Cart {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @Version
+    private Long version;
+
     //usuario
     public Cart(User user) {
         this.user = user;

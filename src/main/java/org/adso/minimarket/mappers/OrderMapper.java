@@ -18,6 +18,12 @@ public interface OrderMapper {
     @Mapping(target = "items", source = "orderItems")
     OrderSummary toOrderSummaryDto(Order order);
 
+    @Mapping(target = "userId", expression = "java(order.getUser().getId())")
+    @Mapping(target = "status", expression = "java(order.getStatus().name().toLowerCase())")
+    @Mapping(target = "total", source = "totalAmount")
+    @Mapping(target = "items", source = "orderItems")
+    OrderDetails toOrderDetailsDto(Order order);
+
     List<OrderSummary> toOrderSummaryDtoList(List<Order> orders);
 
     @Mapping(target = "productName", source = "product.name")

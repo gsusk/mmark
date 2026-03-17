@@ -21,7 +21,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     @Override
     @Transactional
     public CreatePaymentResponse processCheckout(User user, CheckoutRequest request) {
-        OrderDetails order = orderService.placeOrder(user);
+        OrderDetails order = orderService.placeOrder(user, request);
 
         return paymentService.createPayment(
                 CreatePaymentRequest.builder()

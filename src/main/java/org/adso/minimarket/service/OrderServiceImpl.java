@@ -48,14 +48,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public OrderDetails placeOrder(User user) {
-        Order order = createOrder(user);
-        return new OrderDetails(order.getId(),
-                order.getEmail(),
-                user.getId(),
-                order.getStatus().toString().toLowerCase(),
-                order.getTotalAmount(),
-                order.getCreatedAt());
+    public OrderDetails placeOrder(User user, org.adso.minimarket.dto.CheckoutRequest checkoutRequest) {
+        Order order = createOrder(user, checkoutRequest);
+        return orderMapper.toOrderDetailsDto(order);
     }
 
     @Override
@@ -71,7 +66,7 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toOrderSummaryDtoList(orders);
     }
 
-    private Order createOrder(User user) {
+    private Order createOrder(User user, CheckoutRequest shippingInfo) {
         Cart cart = cartService.getCart(user.getId(), null);
         if (cart.getCartItems().isEmpty()) {
             throw new BadRequestException("Invalid order: Cart empty");
@@ -81,8 +76,17 @@ public class OrderServiceImpl implements OrderService {
         order.setUser(user);
         order.setEmail(user.getEmail());
 
+        if (shippingInfo != null) {
+            order.setShippingFullName(shippingInfo.getShippingFullName());
+            order.setShippingAddressLine(shippingInfo.getShippingAddressLine());
+            order.setShippingCity(shippingInfo.getShippingCity());
+            order.setShippingZipCode(shippingInfo.getShippingZipCode());
+            order.setShippingCountry(shippingInfo.getShippingCountry());
+        }
+
         List<Long> productIds = cart.getCartItems().stream()
                 .map(ci -> ci.getProduct().getId())
+                .sorted()
                 .collect(Collectors.toList());
 
         Map<Long, Product> productMap = productRepository.findForUpdateAllByIdIn(productIds).stream()
@@ -101,8 +105,6 @@ public class OrderServiceImpl implements OrderService {
             inventoryService.adjustStock(product.getId(), -ci.getQuantity(),
                     org.adso.minimarket.models.inventory.TransactionType.SALE,
                     "Order placed: " + order.getId());
-
-            product.setStock(product.getStock() - ci.getQuantity());
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
