@@ -18,6 +18,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     @EntityGraph(attributePaths = {"user", "orderItems", "orderItems.product"})
     List<Order> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 
+    @EntityGraph(attributePaths = {"user", "orderItems", "orderItems.product"})
+    List<Order> findAllByOrderByCreatedAtDesc();
+
     @EntityGraph(attributePaths = {"orderItems", "orderItems.product"})
     List<Order> findAllByStatusAndCreatedAtBefore(OrderStatus status, LocalDateTime cutoff);
 }

@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface UserMapper {
     @Mapping(target = "firstName", source = "name")
+    @Mapping(target = "role", source = "role")
     BasicUser toResponseDto(User user);
 
     @Mapping(target = "firstName", source = "name")
