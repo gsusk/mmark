@@ -1,7 +1,7 @@
 package org.adso.minimarket.unit.controller.api;
 
 import org.adso.minimarket.constant.AuthRoutes;
-import org.adso.minimarket.controller.AuthControllerImpl;
+import org.adso.minimarket.controller.api.AuthControllerImpl;
 import org.adso.minimarket.dto.AuthResponse;
 import org.adso.minimarket.dto.LoginRequest;
 import org.adso.minimarket.dto.RegisterRequest;

@@ -1,4 +1,4 @@
-package org.adso.minimarket.controller;
+package org.adso.minimarket.controller.api;
 
 import jakarta.validation.Valid;
 import org.adso.minimarket.dto.InventoryAdjustmentRequest;

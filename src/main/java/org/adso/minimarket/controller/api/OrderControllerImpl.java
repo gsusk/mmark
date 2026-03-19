@@ -1,4 +1,4 @@
-package org.adso.minimarket.unit.api;
+package org.adso.minimarket.controller.api;
 
 import lombok.extern.slf4j.Slf4j;
 import org.adso.minimarket.config.UserPrincipal;

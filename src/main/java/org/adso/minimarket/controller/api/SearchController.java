@@ -1,4 +1,4 @@
-package org.adso.minimarket.unit.api;
+package org.adso.minimarket.controller.api;
 
 import org.springframework.http.ResponseEntity;
 

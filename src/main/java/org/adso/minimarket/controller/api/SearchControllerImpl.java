@@ -1,4 +1,4 @@
-package org.adso.minimarket.unit.api;
+package org.adso.minimarket.controller.api;
 
 import org.adso.minimarket.dto.SearchFilters;
 import org.adso.minimarket.dto.SearchResult;
