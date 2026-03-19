@@ -1,6 +1,5 @@
-package org.adso.minimarket.controller.api;
+package org.adso.minimarket.unit.api;
 
-import jakarta.validation.Valid;
 import org.adso.minimarket.config.UserPrincipal;
 import org.adso.minimarket.dto.CheckoutRequest;
 import org.adso.minimarket.dto.CreatePaymentResponse;

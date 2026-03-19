@@ -1,4 +1,4 @@
-package org.adso.minimarket.controller.api;
+package org.adso.minimarket.unit.api;
 
 import org.adso.minimarket.config.UserPrincipal;
 import org.adso.minimarket.dto.OrderDetails;

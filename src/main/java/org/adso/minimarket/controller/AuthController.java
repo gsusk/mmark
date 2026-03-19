@@ -1,10 +1,9 @@
-package org.adso.minimarket.controller.api;
+package org.adso.minimarket.unit.api;
 
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.adso.minimarket.dto.AuthResponse;
 import org.adso.minimarket.dto.LoginRequest;
-import org.adso.minimarket.dto.RefreshRequest;
 import org.adso.minimarket.dto.RegisterRequest;
 import org.springframework.http.ResponseEntity;
 

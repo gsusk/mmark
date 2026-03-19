@@ -1,7 +1,6 @@
-package org.adso.minimarket.controller.api;
+package org.adso.minimarket.unit.api;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 

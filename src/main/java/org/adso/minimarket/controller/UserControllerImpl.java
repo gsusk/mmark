@@ -1,4 +1,4 @@
-package org.adso.minimarket.controller.api;
+package org.adso.minimarket.unit.api;
 
 import jakarta.validation.Valid;
 import org.adso.minimarket.config.UserPrincipal;
@@ -10,7 +10,6 @@ import org.adso.minimarket.service.UserService;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
