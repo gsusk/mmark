@@ -1,9 +1,10 @@
-package org.adso.minimarket.service;
+package org.adso.minimarket.unit.service;
 
 import org.adso.minimarket.dto.CreateCategoryRequest;
 import org.adso.minimarket.exception.NotFoundException;
 import org.adso.minimarket.models.Category;
 import org.adso.minimarket.repository.jpa.CategoryRepository;
+import org.adso.minimarket.service.CategoryServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -29,8 +30,6 @@ public class CategoryServiceImplTest {
     @Mock
     private CategoryRepository categoryRepository;
 
-    // ── getById ───────────────────────────────────────────────────────────────
-
     @Test
     void getById_whenFound_returnsCategory() {
         Category category = new Category(1L, "Ropa", List.of(), null);
@@ -51,8 +50,6 @@ public class CategoryServiceImplTest {
         assertThrows(NotFoundException.class, () -> categoryService.getById(99L));
         verify(categoryRepository).findById(99L);
     }
-
-    // ── createCategory ────────────────────────────────────────────────────────
 
     @Test
     void createCategory_withoutParent_savesAndReturnsCategory() {
@@ -110,8 +107,6 @@ public class CategoryServiceImplTest {
         assertThrows(NotFoundException.class, () -> categoryService.createCategory(req));
         verify(categoryRepository, never()).save(any());
     }
-
-    // ── getAllFeaturedCategories ───────────────────────────────────────────────
 
     @Test
     void getAllFeaturedCategories_returnsUpToFour() {

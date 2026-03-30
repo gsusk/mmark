@@ -1,4 +1,4 @@
-package org.adso.minimarket.service;
+package org.adso.minimarket.unit.service;
 
 import org.adso.minimarket.dto.BasicUser;
 import org.adso.minimarket.dto.RegisterRequest;
@@ -6,23 +6,24 @@ import org.adso.minimarket.exception.NotFoundException;
 import org.adso.minimarket.mappers.UserMapper;
 import org.adso.minimarket.models.user.User;
 import org.adso.minimarket.repository.jpa.UserRepository;
+import org.adso.minimarket.service.UserService;
+import org.adso.minimarket.service.UserServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
 public class UserServiceImplTest {
 
@@ -43,8 +44,6 @@ public class UserServiceImplTest {
     @MockitoBean
     public UserMapper userMapper;
 
-    // ── createUser ────────────────────────────────────────────────────────────
-
     @Test
     void createUser_withValidRequest_savesAndReturnsUser() {
         RegisterRequest req = new RegisterRequest("Jorge", "Contreras", "jorge@test.com", "password123");
@@ -61,8 +60,6 @@ public class UserServiceImplTest {
         verify(userRepository).save(any(User.class));
         verifyNoInteractions(userMapper);
     }
-
-    // ── getUserByEmail ────────────────────────────────────────────────────────
 
     @Test
     void getUserByEmail_whenFound_returnsMappedBasicUser() {
@@ -89,8 +86,6 @@ public class UserServiceImplTest {
         verifyNoInteractions(userMapper);
     }
 
-    // ── getUserById ───────────────────────────────────────────────────────────
-
     @Test
     void getUserById_whenFound_returnsUser() {
         User user = new User("Test", "User", "test@test.com", "pass");
@@ -113,8 +108,6 @@ public class UserServiceImplTest {
         verifyNoInteractions(userMapper);
     }
 
-    // ── getUserInternalByEmail ────────────────────────────────────────────────
-
     @Test
     void getUserInternalByEmail_whenFound_returnsUserEntity() {
         User user = new User("Test", "User", "test@test.com", "pass");
@@ -136,8 +129,6 @@ public class UserServiceImplTest {
                 () -> userService.getUserInternalByEmail("missing@test.com"));
         verifyNoInteractions(userMapper);
     }
-
-    // ── deleteUser ────────────────────────────────────────────────────────────
 
     @Test
     void deleteUser_callsRepositoryRemoveById() {

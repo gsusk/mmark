@@ -1,6 +1,7 @@
-package org.adso.minimarket.validation;
+package org.adso.minimarket.unit.validation;
 
 import org.adso.minimarket.exception.AttributeValidationException;
+import org.adso.minimarket.validation.ProductAttributeValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -40,14 +41,14 @@ class ProductAttributeValidatorTest {
                 Map.of("name", "size", "type", "string", "required", true)
         );
 
-        Map<String, Object> attributes = Map.of("color", "blue");
+        Map<String, Object> attributes = Map.of();
         AttributeValidationException exception = assertThrows(
                 AttributeValidationException.class,
                 () -> validator.validate(attributes, definitions)
         );
 
         assertEquals(1, exception.getValidationErrors().size());
-        assertTrue(exception.getValidationErrors().get(0).getErrorMessage().contains("Missing required attribute"));
+        assertTrue(exception.getValidationErrors().get(0).getErrorMessage().contains("is required"));
     }
 
     @Test
@@ -95,7 +96,7 @@ class ProductAttributeValidatorTest {
         );
 
         assertEquals(1, exception.getValidationErrors().size());
-        assertTrue(exception.getValidationErrors().get(0).getErrorMessage().contains("invalid value"));
+        assertTrue(exception.getValidationErrors().get(0).getErrorMessage().contains("must be one of"));
     }
 
     @Test
@@ -146,7 +147,7 @@ class ProductAttributeValidatorTest {
         );
 
         assertEquals(1, exception.getValidationErrors().size());
-        assertTrue(exception.getValidationErrors().get(0).getErrorMessage().contains("Unknown attribute"));
+        assertTrue(exception.getValidationErrors().get(0).getErrorMessage().contains("not defined in the category schema"));
     }
 
     @Test

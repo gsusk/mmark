@@ -1,4 +1,4 @@
-package org.adso.minimarket.service;
+package org.adso.minimarket.unit.service;
 
 import org.adso.minimarket.config.UserPrincipal;
 import org.adso.minimarket.dto.AuthResponse;
@@ -7,6 +7,10 @@ import org.adso.minimarket.dto.RegisterRequest;
 import org.adso.minimarket.exception.TokenInvalidException;
 import org.adso.minimarket.exception.WrongCredentialsException;
 import org.adso.minimarket.models.user.User;
+import org.adso.minimarket.service.AuthServiceImpl;
+import org.adso.minimarket.service.CartService;
+import org.adso.minimarket.service.JwtService;
+import org.adso.minimarket.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,8 +53,6 @@ class AuthServiceImplTest {
 
     @Mock
     private JwtService jwtService;
-
-    // ── register ──────────────────────────────────────────────────────────────
 
     @Test
     void register_withValidRequest_returnsTokenPair() {
@@ -104,8 +106,6 @@ class AuthServiceImplTest {
         verifyNoInteractions(cartService);
     }
 
-    // ── loginUser ─────────────────────────────────────────────────────────────
-
     @Test
     void loginUser_withValidCredentials_returnsTokenPair() {
         var req = new LoginRequest("test@test.com", "password");
@@ -152,8 +152,6 @@ class AuthServiceImplTest {
 
         verify(cartService).mergeCarts(user.getId(), guestId);
     }
-
-    // ── refresh ───────────────────────────────────────────────────────────────
 
     @Test
     void refresh_withValidToken_returnsNewAccessToken() {

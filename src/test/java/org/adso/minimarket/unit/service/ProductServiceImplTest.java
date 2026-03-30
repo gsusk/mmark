@@ -1,4 +1,4 @@
-package org.adso.minimarket.service;
+package org.adso.minimarket.unit.service;
 
 import org.adso.minimarket.dto.CreateProductRequest;
 import org.adso.minimarket.dto.DetailedProduct;
@@ -7,6 +7,10 @@ import org.adso.minimarket.mappers.ProductMapper;
 import org.adso.minimarket.models.Category;
 import org.adso.minimarket.models.product.Product;
 import org.adso.minimarket.repository.jpa.ProductRepository;
+import org.adso.minimarket.service.CategoryService;
+import org.adso.minimarket.service.InventoryService;
+import org.adso.minimarket.service.ProductServiceImpl;
+import org.adso.minimarket.service.SearchService;
 import org.adso.minimarket.validation.ProductAttributeValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
 @ExtendWith(MockitoExtension.class)
 public class ProductServiceImplTest {
 
@@ -48,8 +51,6 @@ public class ProductServiceImplTest {
     @Mock
     private InventoryService inventoryService;
 
-    // ── helpers ───────────────────────────────────────────────────────────────
-
     private Category buildCategory(Long id, String name) {
         Category c = new Category(id, name, List.of(), null);
         return c;
@@ -66,8 +67,6 @@ public class ProductServiceImplTest {
         req.setSpecifications(new HashMap<>());
         return req;
     }
-
-    // ── createProduct ─────────────────────────────────────────────────────────
 
     @Test
     void createProduct_withValidRequest_savesProductAndReturnsId() {
@@ -120,8 +119,6 @@ public class ProductServiceImplTest {
         verify(productRepository, never()).save(any());
     }
 
-    // ── getById ───────────────────────────────────────────────────────────────
-
     @Test
     void getById_whenProductExists_returnsProduct() {
         Category category = buildCategory(1L, "Ropa");
@@ -142,8 +139,6 @@ public class ProductServiceImplTest {
 
         assertThrows(NotFoundException.class, () -> productService.getById(999L));
     }
-
-    // ── getDetailedProductById ────────────────────────────────────────────────
 
     @Test
     void getDetailedProductById_whenFound_returnsMappedDto() {
@@ -172,8 +167,6 @@ public class ProductServiceImplTest {
         verifyNoInteractions(productMapper);
     }
 
-    // ── deleteProduct ─────────────────────────────────────────────────────────
-
     @Test
     void deleteProduct_callsRepositoryDeleteById() {
         doNothing().when(productRepository).deleteById(1L);
@@ -182,8 +175,6 @@ public class ProductServiceImplTest {
 
         verify(productRepository).deleteById(1L);
     }
-
-    // ── getFeaturedProducts ───────────────────────────────────────────────────
 
     @Test
     void getFeaturedProducts_returnsUpToEightProducts() {
@@ -202,8 +193,6 @@ public class ProductServiceImplTest {
         assertEquals(2, result.size());
         verify(productRepository).findTop8ByOrderByCreatedAtDesc();
     }
-
-    // ── updateProduct ─────────────────────────────────────────────────────────
 
     @Test
     void updateProduct_withValidData_updatesAndSaves() {

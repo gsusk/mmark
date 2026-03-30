@@ -1,4 +1,4 @@
-package org.adso.minimarket.unit;
+package org.adso.minimarket.unit.controller.api;
 
 import org.adso.minimarket.constant.ProductRoutes;
 import org.adso.minimarket.dto.CreateProductRequest;
@@ -7,7 +7,7 @@ import org.adso.minimarket.exception.NotFoundException;
 import org.adso.minimarket.service.AppUserDetailsServiceImpl;
 import org.adso.minimarket.service.JwtService;
 import org.adso.minimarket.service.ProductService;
-import org.adso.minimarket.unit.api.ProductControllerImpl;
+import org.adso.minimarket.controller.api.ProductControllerImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ActiveProfiles("test")
 @WebMvcTest(ProductControllerImpl.class)
 @ExtendWith(SpringExtension.class)
 public class ProductControllerTest {
@@ -58,8 +57,6 @@ public class ProductControllerTest {
         req.setSpecifications(new HashMap<>());
         return req;
     }
-
-    // ── POST /products ────────────────────────────────────────────────────────
 
     @Test
     void create_withValidRequest_returns201WithLocationHeader() throws Exception {
@@ -106,8 +103,6 @@ public class ProductControllerTest {
         verifyNoInteractions(productService);
     }
 
-    // ── GET /products/{id} ────────────────────────────────────────────────────
-
     @Test
     void getById_whenFound_returns200WithProduct() throws Exception {
         DetailedProduct product = DetailedProduct.builder()
@@ -141,8 +136,6 @@ public class ProductControllerTest {
         mockMvc.perform(get("/products/99"))
                 .andExpect(status().isNotFound());
     }
-
-    // ── GET /products/featured ────────────────────────────────────────────────
 
     @Test
     void getFeatured_returns200WithList() throws Exception {

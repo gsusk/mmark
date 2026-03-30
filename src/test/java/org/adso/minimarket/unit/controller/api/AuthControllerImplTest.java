@@ -14,7 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,7 +26,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("test")
 @WebMvcTest(AuthControllerImpl.class)
 @ExtendWith(SpringExtension.class)
 class AuthControllerImplTest {
@@ -46,8 +44,6 @@ class AuthControllerImplTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    // POST /auth/login
 
     @Test
     void login_withValidCredentials_returns200() throws Exception {
@@ -99,8 +95,6 @@ class AuthControllerImplTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").exists());
     }
-
-    // POST /auth/register
 
     @Test
     void register_withValidRequest_returns201() throws Exception {
