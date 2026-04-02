@@ -11,6 +11,7 @@ import org.adso.minimarket.models.user.User;
 import org.adso.minimarket.repository.jpa.OrderRepository;
 import org.adso.minimarket.repository.jpa.PaymentRepository;
 import org.adso.minimarket.service.PaymentServiceImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -68,7 +69,8 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void createPayment_whenOrderFound_createsPaymentAndCompletesOrder() {
+    @DisplayName("Crear pago cuando el pedido se encuentra crea el pago y completa el pedido")
+    void crearPago_cuandoPedidoSeEncuentra_creaPagoYCompletaPedido() {
         UUID orderId = UUID.randomUUID();
         Order order = buildOrder(orderId, 1L);
 
@@ -91,7 +93,8 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void createPayment_whenOrderNotFound_throwsNotFoundException() {
+    @DisplayName("Crear pago cuando el pedido no se encuentra lanza NotFoundException")
+    void crearPago_cuandoPedidoNoSeEncuentra_lanzaNotFoundException() {
         UUID randomId = UUID.randomUUID();
         when(orderRepository.findById(randomId)).thenReturn(Optional.empty());
 
@@ -102,7 +105,8 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void createPayment_generatesUniquePaymentReferences() {
+    @DisplayName("Crear pago genera referencias de pago unicas")
+    void crearPago_generaReferenciasDePagoUnicas() {
         UUID orderId1 = UUID.randomUUID();
         UUID orderId2 = UUID.randomUUID();
         Order order1 = buildOrder(orderId1, 1L);
@@ -120,7 +124,8 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void getPaymentByOrderId_whenExists_returnsPaymentResponse() {
+    @DisplayName("Obtener pago por OrderId cuando existe retorna la respuesta del pago")
+    void obtenerPagoPorOrderId_cuandoExiste_retornaRespuestaPago() {
         UUID orderId = UUID.randomUUID();
         Order order = buildOrder(orderId, 1L);
 
@@ -141,7 +146,8 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void getPaymentByOrderId_whenPaymentNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener pago por OrderId cuando el pago no se encuentra lanza NotFoundException")
+    void obtenerPagoPorOrderId_cuandoPagoNoSeEncuentra_lanzaNotFoundException() {
         UUID orderId = UUID.randomUUID();
         when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.empty());
 
@@ -150,7 +156,8 @@ class PaymentServiceImplTest {
     }
 
     @Test
-    void getPaymentByOrderId_whenUserIdMismatch_throwsNotFoundException() {
+    @DisplayName("Obtener pago por OrderId cuando el ID de usuario no coincide lanza NotFoundException")
+    void obtenerPagoPorOrderId_cuandoIdUsuarioNoCoincide_lanzaNotFoundException() {
         UUID orderId = UUID.randomUUID();
         Order order = buildOrder(orderId, 1L);
 

@@ -8,6 +8,7 @@ import org.adso.minimarket.service.AppUserDetailsServiceImpl;
 import org.adso.minimarket.service.JwtService;
 import org.adso.minimarket.service.ProductService;
 import org.adso.minimarket.controller.api.ProductControllerImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,7 +60,8 @@ public class ProductControllerTest {
     }
 
     @Test
-    void create_withValidRequest_returns201WithLocationHeader() throws Exception {
+    @DisplayName("Crear con solicitud válida retorna 201 con el encabezado Location")
+    void crear_conSolicitudValida_retorna201ConEncabezadoLocation() throws Exception {
         when(productService.createProduct(any(CreateProductRequest.class))).thenReturn(1L);
 
         mockMvc.perform(
@@ -74,7 +76,8 @@ public class ProductControllerTest {
     }
 
     @Test
-    void create_withMissingName_returns400() throws Exception {
+    @DisplayName("Crear con nombre faltante retorna 400")
+    void crear_conNombreFaltante_retorna400() throws Exception {
         CreateProductRequest req = buildValidRequest();
         req.setName("");
 
@@ -89,7 +92,8 @@ public class ProductControllerTest {
     }
 
     @Test
-    void create_withNullCategoryId_returns400() throws Exception {
+    @DisplayName("Crear con ID de categoría nulo retorna 400")
+    void crear_conIdCategoriaNulo_retorna400() throws Exception {
         CreateProductRequest req = buildValidRequest();
         req.setCategoryId(null);
 
@@ -104,7 +108,8 @@ public class ProductControllerTest {
     }
 
     @Test
-    void getById_whenFound_returns200WithProduct() throws Exception {
+    @DisplayName("Obtener por ID cuando se encuentra retorna 200 con el producto")
+    void obtenerPorId_cuandoSeEncuentra_retorna200ConProducto() throws Exception {
         DetailedProduct product = DetailedProduct.builder()
                 .id(1L)
                 .name("Camisa")
@@ -122,7 +127,8 @@ public class ProductControllerTest {
     }
 
     @Test
-    void getById_withStringId_returns400() throws Exception {
+    @DisplayName("Obtener por ID con un ID de texto retorna 400")
+    void obtenerPorId_conIdDeTexto_retorna400() throws Exception {
         mockMvc.perform(get("/products/abc"))
                 .andExpect(status().isBadRequest());
 
@@ -130,7 +136,8 @@ public class ProductControllerTest {
     }
 
     @Test
-    void getById_whenNotFound_returns404() throws Exception {
+    @DisplayName("Obtener por ID cuando no se encuentra retorna 404")
+    void obtenerPorId_cuandoNoSeEncuentra_retorna404() throws Exception {
         when(productService.getDetailedProductById(99L)).thenThrow(new NotFoundException("Product not found"));
 
         mockMvc.perform(get("/products/99"))
@@ -138,7 +145,8 @@ public class ProductControllerTest {
     }
 
     @Test
-    void getFeatured_returns200WithList() throws Exception {
+    @DisplayName("Obtener destacados retorna 200 con la lista")
+    void obtenerDestacados_retorna200ConLista() throws Exception {
         DetailedProduct p1 = DetailedProduct.builder().id(1L).name("P1").build();
         DetailedProduct p2 = DetailedProduct.builder().id(2L).name("P2").build();
 

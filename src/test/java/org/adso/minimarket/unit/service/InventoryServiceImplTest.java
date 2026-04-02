@@ -8,6 +8,7 @@ import org.adso.minimarket.models.product.Product;
 import org.adso.minimarket.repository.jpa.InventoryTransactionRepository;
 import org.adso.minimarket.repository.jpa.ProductRepository;
 import org.adso.minimarket.service.InventoryServiceImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,7 +45,8 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    void adjustStock_withValidDecrease_updatesStockAndLogsTransaction() {
+    @DisplayName("Ajustar stock con decremento válido actualiza el stock y registra la transacción")
+    void ajustarStock_conDecrementoValido_actualizaStockYRegistraTransaccion() {
         Product product = buildProduct(1L, "Camisa", 10);
 
         when(productRepository.findForUpdateById(1L)).thenReturn(Optional.of(product));
@@ -60,7 +62,8 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    void adjustStock_withPositiveIncrease_updatesStockCorrectly() {
+    @DisplayName("Ajustar stock con incremento positivo actualiza el stock correctamente")
+    void ajustarStock_conIncrementoPositivo_actualizaStockCorrectamente() {
         Product product = buildProduct(1L, "Camisa", 5);
 
         when(productRepository.findForUpdateById(1L)).thenReturn(Optional.of(product));
@@ -73,7 +76,8 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    void adjustStock_whenProductNotFound_throwsNotFoundException() {
+    @DisplayName("Ajustar stock cuando no se encuentra el producto lanza NotFoundException")
+    void ajustarStock_cuandoProductoNoSeEncuentra_lanzaNotFoundException() {
         when(productRepository.findForUpdateById(99L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class,
@@ -83,7 +87,8 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    void adjustStock_whenResultNegative_throwsInventoryAdjustmentException() {
+    @DisplayName("Ajustar stock cuando el resultado es negativo lanza InventoryAdjustmentException")
+    void ajustarStock_cuandoResultadoNegativo_lanzaInventoryAdjustmentException() {
         Product product = buildProduct(1L, "Camisa", 2);
 
         when(productRepository.findForUpdateById(1L)).thenReturn(Optional.of(product));
@@ -96,7 +101,8 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    void adjustStock_toExactZero_isAllowed() {
+    @DisplayName("Ajustar stock a cero exacto está permitido")
+    void ajustarStock_aCeroExacto_estaPermitido() {
         Product product = buildProduct(1L, "Pantalon", 5);
 
         when(productRepository.findForUpdateById(1L)).thenReturn(Optional.of(product));
@@ -109,7 +115,8 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    void logTransaction_savesTransactionWithCorrectFields() {
+    @DisplayName("Registrar transacción guarda la transacción con los campos correctos")
+    void registrarTransaccion_guardaTransaccionConCamposCorrectos() {
         Product product = buildProduct(1L, "Zapatos", 20);
 
         when(inventoryTransactionRepository.save(any(InventoryTransaction.class)))
@@ -122,7 +129,8 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    void getStockHistory_returnsTransactionList() {
+    @DisplayName("Obtener historial de stock retorna lista de transacciones")
+    void obtenerHistorialStock_retornaListaDeTransacciones() {
         Product product = buildProduct(1L, "Camisa", 10);
         InventoryTransaction t1 = new InventoryTransaction(product, -3, TransactionType.SALE, "sale1");
         InventoryTransaction t2 = new InventoryTransaction(product, 10, TransactionType.RESTOCK, "restock1");
@@ -137,7 +145,8 @@ class InventoryServiceImplTest {
     }
 
     @Test
-    void getStockHistory_whenNoTransactions_returnsEmptyList() {
+    @DisplayName("Obtener historial de stock cuando no hay transacciones retorna lista vacía")
+    void obtenerHistorialStock_cuandoNoHayTransacciones_retornaListaVacia() {
         when(inventoryTransactionRepository.findByProductIdOrderByCreatedAtDesc(1L))
                 .thenReturn(List.of());
 

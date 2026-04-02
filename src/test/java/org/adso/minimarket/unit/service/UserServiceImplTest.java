@@ -8,6 +8,7 @@ import org.adso.minimarket.models.user.User;
 import org.adso.minimarket.repository.jpa.UserRepository;
 import org.adso.minimarket.service.UserService;
 import org.adso.minimarket.service.UserServiceImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +46,8 @@ public class UserServiceImplTest {
     public UserMapper userMapper;
 
     @Test
-    void createUser_withValidRequest_savesAndReturnsUser() {
+    @DisplayName("Crear usuario con solicitud válida guarda y retorna el usuario")
+    void crearUsuario_conSolicitudValida_guardaYRetornaUsuario() {
         RegisterRequest req = new RegisterRequest("Jorge", "Contreras", "jorge@test.com", "password123");
         User mockUser = new User("Jorge", "Contreras", "jorge@test.com", "password123");
         ReflectionTestUtils.setField(mockUser, "id", 1L);
@@ -62,7 +64,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void getUserByEmail_whenFound_returnsMappedBasicUser() {
+    @DisplayName("Obtener usuario por email cuando se encuentra retorna el usuario mapeado")
+    void obtenerUsuarioPorEmail_cuandoSeEncuentra_retornaUsuarioMapeado() {
         User user = new User("Test", "User", "test@test.com", "pass");
         BasicUser basicUser = BasicUser.builder()
                 .id(1L).firstName("Test").lastName("User").email("test@test.com").build();
@@ -79,7 +82,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void getUserByEmail_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener usuario por email cuando no se encuentra lanza NotFoundException")
+    void obtenerUsuarioPorEmail_cuandoNoSeEncuentra_lanzaNotFoundException() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> userService.getUserByEmail("missing@test.com"));
@@ -87,7 +91,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void getUserById_whenFound_returnsUser() {
+    @DisplayName("Obtener usuario por ID cuando se encuentra retorna el usuario")
+    void obtenerUsuarioPorId_cuandoSeEncuentra_retornaUsuario() {
         User user = new User("Test", "User", "test@test.com", "pass");
         ReflectionTestUtils.setField(user, "id", 1L);
 
@@ -101,7 +106,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void getUserById_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener usuario por ID cuando no se encuentra lanza NotFoundException")
+    void obtenerUsuarioPorId_cuandoNoSeEncuentra_lanzaNotFoundException() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> userService.getUserById(99L));
@@ -109,7 +115,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void getUserInternalByEmail_whenFound_returnsUserEntity() {
+    @DisplayName("Obtener usuario interno por email cuando se encuentra retorna la entidad de usuario")
+    void obtenerUsuarioInternoPorEmail_cuandoSeEncuentra_retornaEntidadUsuario() {
         User user = new User("Test", "User", "test@test.com", "pass");
 
         when(userRepository.findByEmail("test@test.com")).thenReturn(Optional.of(user));
@@ -122,7 +129,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void getUserInternalByEmail_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener usuario interno por email cuando no se encuentra lanza NotFoundException")
+    void obtenerUsuarioInternoPorEmail_cuandoNoSeEncuentra_lanzaNotFoundException() {
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class,
@@ -131,7 +139,8 @@ public class UserServiceImplTest {
     }
 
     @Test
-    void deleteUser_callsRepositoryRemoveById() {
+    @DisplayName("Eliminar usuario llama al repositorio para remover por ID")
+    void eliminarUsuario_llamaARepositorioRemoverPorId() {
         doNothing().when(userRepository).removeUserById(1L);
 
         userService.deleteUser(1L);

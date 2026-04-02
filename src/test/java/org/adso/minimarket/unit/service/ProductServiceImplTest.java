@@ -12,6 +12,7 @@ import org.adso.minimarket.service.InventoryService;
 import org.adso.minimarket.service.ProductServiceImpl;
 import org.adso.minimarket.service.SearchService;
 import org.adso.minimarket.validation.ProductAttributeValidator;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -69,7 +70,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void createProduct_withValidRequest_savesProductAndReturnsId() {
+    @DisplayName("Crear producto con solicitud válida guarda el producto y retorna el ID")
+    void crearProducto_conSolicitudValida_guardaProductoYRetornaId() {
         Category category = buildCategory(1L, "Ropa");
         CreateProductRequest req = buildRequest("Camisa", new BigDecimal("50.00"), 1L, 10);
 
@@ -91,7 +93,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void createProduct_withZeroStock_doesNotLogInitialTransaction() {
+    @DisplayName("Crear producto con stock cero no registra transaccionn inicial")
+    void crearProducto_conStockCero_noRegistraTransaccionInicial() {
         Category category = buildCategory(1L, "Ropa");
         CreateProductRequest req = buildRequest("Camisa", new BigDecimal("50.00"), 1L, 0);
 
@@ -110,7 +113,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void createProduct_whenCategoryNotFound_throwsNotFoundException() {
+    @DisplayName("Crear producto cuando no se encuentra la categoraa lanza NotFoundException")
+    void crearProducto_cuandoCategoriaNoSeEncuentra_lanzaNotFoundException() {
         when(categoryService.getById(99L)).thenThrow(new NotFoundException("Category not found"));
 
         CreateProductRequest req = buildRequest("Camisa", new BigDecimal("50.00"), 99L, 5);
@@ -120,7 +124,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void getById_whenProductExists_returnsProduct() {
+    @DisplayName("Obtener por id cuando el producto existe retorna el producto")
+    void obtenerPorId_cuandoProductoExiste_retornaProducto() {
         Category category = buildCategory(1L, "Ropa");
         Product product = new Product("Camisa", "desc", new BigDecimal("50.00"), 5, category, "Brand", new HashMap<>());
         ReflectionTestUtils.setField(product, "id", 1L);
@@ -134,14 +139,16 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void getById_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener por id cuando no se encuentra lanza NotFoundException")
+    void obtenerPorId_cuandoNoSeEncuentra_lanzaNotFoundException() {
         when(productRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> productService.getById(999L));
     }
 
     @Test
-    void getDetailedProductById_whenFound_returnsMappedDto() {
+    @DisplayName("obtener producto detallado por id cuando se encuentra retorna DTO mapeado")
+    void obtenerProductoDetalladoPorId_cuandoSeEncuentra_retornaDtoMapeado() {
         Category category = buildCategory(1L, "Ropa");
         Product product = new Product("Camisa", "desc", new BigDecimal("50.00"), 5, category, "Brand", new HashMap<>());
         ReflectionTestUtils.setField(product, "id", 1L);
@@ -160,7 +167,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void getDetailedProductById_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener producto detallado por id cuando no se encuentra lanza NotFoundException")
+    void obtenerProductoDetalladoPorId_cuandoNoSeEncuentra_lanzaNotFoundException() {
         when(productRepository.findDetailedById(999L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> productService.getDetailedProductById(999L));
@@ -168,7 +176,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void deleteProduct_callsRepositoryDeleteById() {
+    @DisplayName("Eliminar producto llama al repositorio para borrar por id")
+    void eliminarProducto_llamaARepositorioBorrarPorId() {
         doNothing().when(productRepository).deleteById(1L);
 
         productService.deleteProduct(1L);
@@ -177,7 +186,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void getFeaturedProducts_returnsUpToEightProducts() {
+    @DisplayName("Obtener productos destacados retorna hasta ocho productos")
+    void obtenerProductosDestacados_retornaHastaOchoProductos() {
         Category category = buildCategory(1L, "Ropa");
         Product p1 = new Product("P1", "d", new BigDecimal("10"), 1, category, "B", new HashMap<>());
         Product p2 = new Product("P2", "d", new BigDecimal("20"), 2, category, "B", new HashMap<>());
@@ -195,7 +205,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void updateProduct_withValidData_updatesAndSaves() {
+    @DisplayName("Actualizar producto con datos validos actualiza y guarda")
+    void actualizarProducto_conDatosValidos_actualizaYGuarda() {
         Category category = buildCategory(1L, "Ropa");
         Product existing = new Product("Viejo", "desc", new BigDecimal("30.00"), 5, category, "OldBrand", new HashMap<>());
         ReflectionTestUtils.setField(existing, "id", 1L);
@@ -216,7 +227,8 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void updateProduct_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Actualizar producto cuando no se encuentra lanza NotFoundException")
+    void actualizarProducto_cuandoNoSeEncuentra_lanzaNotFoundException() {
         when(productRepository.findById(99L)).thenReturn(Optional.empty());
 
         CreateProductRequest req = buildRequest("Nuevo", new BigDecimal("50.00"), 1L, 5);

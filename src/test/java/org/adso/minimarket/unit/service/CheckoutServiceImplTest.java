@@ -9,6 +9,7 @@ import org.adso.minimarket.models.user.User;
 import org.adso.minimarket.service.CheckoutServiceImpl;
 import org.adso.minimarket.service.OrderService;
 import org.adso.minimarket.service.PaymentService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -54,7 +55,8 @@ class CheckoutServiceImplTest {
     }
 
     @Test
-    void processCheckout_withValidData_placesOrderAndCreatesPayment() {
+    @DisplayName("Procesar checkout con datos válidos realiza pedido y crea pago")
+    void procesarCheckout_conDatosValidos_realizaPedidoYCreaPago() {
         User user = buildUser(1L);
         CheckoutRequest request = buildRequest();
         UUID orderId = UUID.randomUUID();
@@ -85,7 +87,8 @@ class CheckoutServiceImplTest {
     }
 
     @Test
-    void processCheckout_propagatesCorrectShippingDataToPayment() {
+    @DisplayName("Procesar checkout propaga datos de envío correctos al pago")
+    void procesarCheckout_propagaDatosDeEnvioCorrectosAlPago() {
         User user = buildUser(1L);
         CheckoutRequest request = buildRequest();
         UUID orderId = UUID.randomUUID();
@@ -116,7 +119,8 @@ class CheckoutServiceImplTest {
     }
 
     @Test
-    void processCheckout_whenOrderServiceFails_doesNotCallPaymentService() {
+    @DisplayName("Procesar checkout cuando el servicio de pedidos falla no llama al servicio de pagos")
+    void procesarCheckout_cuandoServicioDePedidosFalla_noLlamaAlServicioDePagos() {
         User user = buildUser(1L);
         CheckoutRequest request = buildRequest();
 

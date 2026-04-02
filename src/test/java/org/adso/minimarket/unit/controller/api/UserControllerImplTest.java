@@ -7,6 +7,7 @@ import org.adso.minimarket.service.JwtService;
 import org.adso.minimarket.mappers.UserMapper;
 import org.adso.minimarket.service.UserService;
 import org.adso.minimarket.controller.api.UserControllerImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,8 @@ public class UserControllerImplTest {
     private UserMapper userMapper;
 
     @Test
-    void getMe_withoutAuth_returnsUnauthorizedOrForbidden() throws Exception {
+    @DisplayName("obtenerYo sin autenticación retorna No Autorizado o Prohibido")
+    void obtenerYo_sinAutenticacion_retornaNoAutorizadoOProhibido() throws Exception {
         mockMvc.perform(get(UserRoutes.GET_USER))
                 .andExpect(status().is4xxClientError());
     }

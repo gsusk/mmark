@@ -11,6 +11,7 @@ import org.adso.minimarket.service.AuthServiceImpl;
 import org.adso.minimarket.service.CartService;
 import org.adso.minimarket.service.JwtService;
 import org.adso.minimarket.service.UserService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -55,7 +56,8 @@ class AuthServiceImplTest {
     private JwtService jwtService;
 
     @Test
-    void register_withValidRequest_returnsTokenPair() {
+    @DisplayName("Registro con solicitud válida retorna par de tokens")
+    void registro_conSolicitudValida_retornaParDeTokens() {
         var req = new RegisterRequest("Jorge", "Contreras", "jorge@test.com", "password123");
         User savedUser = new User("Jorge", "Contreras", "jorge@test.com", "encoded");
         ReflectionTestUtils.setField(savedUser, "id", 1L);
@@ -75,7 +77,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void register_withGuestId_mergesCarts() {
+    @DisplayName("Registro con ID de invitado fusiona carritos")
+    void registro_conIdInvitado_fusionaCarritos() {
         UUID guestId = UUID.randomUUID();
         var req = new RegisterRequest("Ana", "Lopez", "ana@test.com", "pass");
         User savedUser = new User("Ana", "Lopez", "ana@test.com", "encoded");
@@ -92,7 +95,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void register_withoutGuestId_doesNotMergeCarts() {
+    @DisplayName("Registro sin ID de invitado no fusiona carritos")
+    void registro_sinIdInvitado_noFusionaCarritos() {
         var req = new RegisterRequest("Ana", "Lopez", "ana@test.com", "pass");
         User savedUser = new User("Ana", "Lopez", "ana@test.com", "encoded");
 
@@ -107,7 +111,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void loginUser_withValidCredentials_returnsTokenPair() {
+    @DisplayName("Login de usuario con credenciales válidas retorna par de tokens")
+    void loginUsuario_conCredencialesValidas_retornaParDeTokens() {
         var req = new LoginRequest("test@test.com", "password");
         User user = new User("Test", "User", "test@test.com", "encoded");
         UserPrincipal principal = new UserPrincipal(user);
@@ -125,7 +130,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void loginUser_withWrongCredentials_throwsWrongCredentialsException() {
+    @DisplayName("Login de usuario con credenciales incorrectas lanza WrongCredentialsException")
+    void loginUsuario_conCredencialesIncorrectas_lanzaWrongCredentialsException() {
         var req = new LoginRequest("bad@test.com", "wrongpass");
 
         when(authManager.authenticate(any())).thenThrow(new BadCredentialsException("bad"));
@@ -135,7 +141,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void loginUser_withGuestId_mergesCarts() {
+    @DisplayName("Login de usuario con ID de invitado fusiona carritos")
+    void loginUsuario_conIdInvitado_fusionaCarritos() {
         UUID guestId = UUID.randomUUID();
         var req = new LoginRequest("test@test.com", "password");
         User user = new User("Test", "User", "test@test.com", "enc");
@@ -154,7 +161,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void refresh_withValidToken_returnsNewAccessToken() {
+    @DisplayName("Refresh con token valido retorna nuevo token de acceso")
+    void refresh_conTokenValido_retornaNuevoTokenDeAcceso() {
         String refreshToken = "valid-refresh-token";
         User user = new User("Test", "User", "test@test.com", "pass");
 
@@ -170,7 +178,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void refresh_withNullEmail_throwsTokenInvalidException() {
+    @DisplayName("Refresh con email nulo lanza TokenInvalidException")
+    void refresh_conEmailNulo_lanzaTokenInvalidException() {
         when(jwtService.extractRefreshUsername(anyString())).thenReturn(null);
 
         assertThrows(TokenInvalidException.class, () -> authService.refresh("bad-token"));
@@ -178,7 +187,8 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void refresh_withInvalidToken_throwsTokenInvalidException() {
+    @DisplayName("Refresh con token inválido lanza TokenInvalidException")
+    void refresh_conTokenInvalido_lanzaTokenInvalidException() {
         String refreshToken = "invalid-token";
         User user = new User("Test", "User", "test@test.com", "pass");
 

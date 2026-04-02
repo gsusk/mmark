@@ -20,6 +20,7 @@ import org.adso.minimarket.repository.jpa.ProductRepository;
 import org.adso.minimarket.service.CartService;
 import org.adso.minimarket.service.InventoryService;
 import org.adso.minimarket.service.OrderServiceImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -79,7 +80,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void placeOrder_withValidCart_createsOrderSuccessfully() {
+    @DisplayName("Realizar pedido con carrito válido crea el pedido exitosamente")
+    void realizarPedido_conCarritoValido_creaPedidoExitosamente() {
         User user = buildUser(1L);
         Product product = buildProduct(10L, "Camisa", 20, new BigDecimal("50.00"));
 
@@ -111,7 +113,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void placeOrder_withEmptyCart_throwsBadRequestException() {
+    @DisplayName("Realizar pedido con carrito vacío lanza BadRequestException")
+    void realizarPedido_conCarritoVacio_lanzaBadRequestException() {
         User user = buildUser(1L);
         Cart cart = new Cart(user);
         ReflectionTestUtils.setField(cart, "id", 1L);
@@ -125,7 +128,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void placeOrder_whenStockInsufficient_throwsOrderInsufficientStockException() {
+    @DisplayName("Realizar pedido cuando el stock es insuficiente lanza OrderInsufficientStockException")
+    void realizarPedido_cuandoStockInsuficiente_lanzaOrderInsufficientStockException() {
         User user = buildUser(1L);
         Product product = buildProduct(10L, "Camisa", 1, new BigDecimal("50.00"));
 
@@ -144,7 +148,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void getOrderById_whenOrderExists_returnsOrderSummary() {
+    @DisplayName("Obtener pedido por id cuando el pedido existe retorna el resumen del pedido")
+    void obtenerPedidoPorId_cuandoPedidoExiste_retornaResumenPedido() {
         UUID orderId = UUID.randomUUID();
         Order order = new Order();
         ReflectionTestUtils.setField(order, "id", orderId);
@@ -162,7 +167,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void getOrderById_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener pedido por id cuando no se encuentra lanza NotFoundException")
+    void obtenerPedidoPorId_cuandoNoSeEncuentra_lanzaNotFoundException() {
         UUID orderId = UUID.randomUUID();
 
         when(orderRepository.findOrderByIdAndUserId(orderId, 1L)).thenReturn(Optional.empty());
@@ -172,7 +178,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void getUserOrders_returnsMappedList() {
+    @DisplayName("Obtener pedidos de usuario retorna lista mapeada")
+    void obtenerPedidosDeUsuario_retornaListaMapeada() {
         Order o1 = new Order();
         Order o2 = new Order();
         OrderSummary s1 = new OrderSummary();
@@ -188,7 +195,8 @@ class OrderServiceImplTest {
     }
 
     @Test
-    void getUserOrders_whenNoOrders_returnsEmptyList() {
+    @DisplayName("Obtener pedidos de usuario cuando no hay pedidos retorna lista vacía")
+    void obtenerPedidosDeUsuario_cuandoNoHayPedidos_retornaListaVacia() {
         when(orderRepository.findAllByUserIdOrderByCreatedAtDesc(1L)).thenReturn(List.of());
         when(orderMapper.toOrderSummaryDtoList(List.of())).thenReturn(List.of());
 

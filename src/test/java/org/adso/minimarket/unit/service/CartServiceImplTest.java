@@ -14,6 +14,7 @@ import org.adso.minimarket.repository.jpa.CartRepository;
 import org.adso.minimarket.repository.jpa.UserRepository;
 import org.adso.minimarket.service.CartServiceImpl;
 import org.adso.minimarket.service.ProductService;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -63,7 +64,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void getCart_byUserId_returnsActiveCart() {
+    @DisplayName("Obtener carrito por ID de usuario retorna carrito activo")
+    void obtenerCarrito_porIdUsuario_retornaCarritoActivo() {
         Cart cart = buildCart(1L);
         when(cartRepository.findCartByUserIdAndStatus(1L, CartStatus.ACTIVE)).thenReturn(Optional.of(cart));
 
@@ -74,7 +76,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void getCart_byGuestId_returnsActiveCart() {
+    @DisplayName("Obtener carrito porr ID de invitado retorna carrito activo")
+    void obtenerCarrito_porIdInvitado_retornaCarritoActivo() {
         UUID guestId = UUID.randomUUID();
         Cart cart = new Cart(guestId);
         ReflectionTestUtils.setField(cart, "id", 2L);
@@ -88,14 +91,16 @@ class CartServiceImplTest {
     }
 
     @Test
-    void getCart_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener carrito cuando no se encuentra lanza NotFoundException")
+    void obtenerCarrito_cuandoNoSeEncuentra_lanzaNotFoundException() {
         when(cartRepository.findCartByUserIdAndStatus(any(), any())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> cartService.getCart(1L, null));
     }
 
     @Test
-    void getShoppingCart_returnsMappedDto() {
+    @DisplayName("Obtener carrito de compras retorna DTO mapeado")
+    void obtenerCarritoDeCompras_retornaDtoMapeado() {
         Cart cart = buildCart(1L);
         ShoppingCart dto = new ShoppingCart(Set.of(), "0.00", 0);
 
@@ -109,7 +114,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void createCart_abandonsExistingActiveCartsAndCreatesNew() {
+    @DisplayName("Crear carrito abandona carritos activos existentes y crea uno nuevo")
+    void crearCarrito_abandonaCarritosActivosExistentesYCreaUnoNuevo() {
         User user = new User("Test", "User", "test@test.com", "pass");
         ReflectionTestUtils.setField(user, "id", 1L);
 
@@ -130,7 +136,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void addItemToCart_newProduct_addsItemSuccessfully() {
+    @DisplayName("Agregar item al carrito producto nuevo agrega item exitosamente")
+    void agregarItemAlCarrito_productoNuevo_agregaItemExitosamente() {
         Product product = buildProduct(5L, "Camisa", 10, new BigDecimal("25.00"));
         Cart cart = buildCart(1L);
         ShoppingCart dto = new ShoppingCart(Set.of(), "25.00", 1);
@@ -148,7 +155,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void addItemToCart_whenInsufficientStock_throwsException() {
+    @DisplayName("Agregar item al carrito cuando hay stock insuficiente lanza excepción")
+    void agregarItemAlCarrito_cuandoStockInsuficiente_lanzaExcepcion() {
         Product product = buildProduct(5L, "Camisa", 1, new BigDecimal("25.00"));
         Cart cart = buildCart(1L);
 
@@ -162,7 +170,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void removeItemFromCart_whenItemExists_removesAndReturnsCart() {
+    @DisplayName("Remover item del carrito cuando el item existe lo remueve y retorna el carrito")
+    void removerItemDelCarrito_cuandoItemExiste_remueveYRetornaCarrito() {
         Product product = buildProduct(5L, "Camisa", 10, new BigDecimal("25.00"));
         Cart cart = buildCart(1L);
         CartItem cartItem = new CartItem(cart, product, 2);
@@ -180,7 +189,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void removeItemFromCart_whenItemNotFound_throwsNotFoundException() {
+    @DisplayName("Remover item del carrito cuando el item no se encuentra lanza NotFoundException")
+    void removerItemDelCarrito_cuandoItemNoSeEncuentra_lanzaNotFoundException() {
         Cart cart = buildCart(1L);
 
         when(cartRepository.findCartByUserIdAndStatus(1L, CartStatus.ACTIVE)).thenReturn(Optional.of(cart));
@@ -190,7 +200,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void updateItemQuantity_withValidQuantity_updatesItem() {
+    @DisplayName("Actualizar cantidad item con cantidad válida actualiza el item")
+    void actualizarCantidadItem_conCantidadValida_actualizaItem() {
         Product product = buildProduct(5L, "Camisa", 10, new BigDecimal("25.00"));
         Cart cart = buildCart(1L);
         CartItem cartItem = new CartItem(cart, product, 2);
@@ -208,7 +219,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void updateItemQuantity_withZeroQuantity_removesItem() {
+    @DisplayName("Actualizar cantidad item con cantidad cero remueve el item")
+    void actualizarCantidadItem_conCantidadCero_remueveItem() {
         Product product = buildProduct(5L, "Camisa", 10, new BigDecimal("25.00"));
         Cart cart = buildCart(1L);
         CartItem cartItem = new CartItem(cart, product, 2);
@@ -225,7 +237,8 @@ class CartServiceImplTest {
     }
 
     @Test
-    void updateItemQuantity_whenExceedsStock_throwsException() {
+    @DisplayName("Actualizar cantidad item cuando excede el stock lanza laa excepción")
+    void actualizarCantidadItem_cuandoExcedeStock_lanzaExcepcion() {
         Product product = buildProduct(5L, "Camisa", 3, new BigDecimal("25.00"));
         Cart cart = buildCart(1L);
         CartItem cartItem = new CartItem(cart, product, 1);

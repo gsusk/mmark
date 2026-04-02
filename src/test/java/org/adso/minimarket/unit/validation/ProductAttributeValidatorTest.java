@@ -3,6 +3,7 @@ package org.adso.minimarket.unit.validation;
 import org.adso.minimarket.exception.AttributeValidationException;
 import org.adso.minimarket.validation.ProductAttributeValidator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -21,7 +22,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withValidAttributes_shouldPass() {
+    @DisplayName("Validar con atributos válidos debería pasar")
+    void validar_conAtributosValidos_deberiaPasar() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "size", "type", "string", "required", true, "options", List.of("S", "M", "L")),
                 Map.of("name", "color", "type", "string", "required", false)
@@ -36,7 +38,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withMissingRequiredAttribute_shouldThrowException() {
+    @DisplayName("Validar con atributo requerido faltante debería lanzar excepción")
+    void validar_conAtributoRequeridoFaltante_deberiaLanzarExcepcion() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "size", "type", "string", "required", true)
         );
@@ -52,7 +55,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withWrongType_shouldThrowException() {
+    @DisplayName("Validar con tipo incorrecto debería lanzar excepción")
+    void validar_conTipoIncorrecto_deberiaLanzarExcepcion() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "price", "type", "number", "required", true)
         );
@@ -68,7 +72,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withBlankString_shouldThrowException() {
+    @DisplayName("Validar con string en blanco debería lanzar excepción")
+    void validar_conStringEnBlanco_deberiaLanzarExcepcion() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "name", "type", "string", "required", true)
         );
@@ -84,7 +89,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withInvalidEnumValue_shouldThrowException() {
+    @DisplayName("Validar con valor enum inválido debería lanzar excepción")
+    void validar_conValorEnumInvalido_deberiaLanzarExcepcion() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "size", "type", "string", "required", true, "options", List.of("S", "M", "L"))
         );
@@ -100,7 +106,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withNumberBelowMin_shouldThrowException() {
+    @DisplayName("Validar con número por debajo del mínimo debería lanzar excepción")
+    void validar_conNumeroPorDebajoDelMinimo_deberiaLanzarExcepcion() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "age", "type", "number", "required", true, "min", 18)
         );
@@ -116,7 +123,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withNumberAboveMax_shouldThrowException() {
+    @DisplayName("Validar con número por encima del máximo debería lanzar excepción")
+    void validar_conNumeroPorEncimaDelMaximo_deberiaLanzarExcepcion() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "age", "type", "number", "required", true, "max", 100)
         );
@@ -132,7 +140,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withUnknownAttribute_shouldThrowException() {
+    @DisplayName("Validar con atributo desconocido debería lanzar excepción")
+    void validar_conAtributoDesconocido_deberiaLanzarExcepcion() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "size", "type", "string", "required", true)
         );
@@ -151,7 +160,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withMultipleErrors_shouldAccumulateAll() {
+    @DisplayName("Validar con múltiples errores debería acumular todos")
+    void validar_conMultiplesErrores_deberiaAcumularTodos() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "size", "type", "string", "required", true),
                 Map.of("name", "price", "type", "number", "required", true, "min", 10),
@@ -172,7 +182,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withBooleanType_shouldValidateCorrectly() {
+    @DisplayName("Validar con tipo booleano debería validar correctamente")
+    void validar_conTipoBooleano_deberiaValidarCorrectamente() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "inStock", "type", "boolean", "required", true)
         );
@@ -185,7 +196,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withNumberEnumOptions_shouldHandleCorrectly() {
+    @DisplayName("Validar con opciones enum numéricas debería manejar correctamente")
+    void validar_conOpcionesEnumNumericas_deberiaManejarCorrectamente() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "storage_gb", "type", "number", "required", true, "options", List.of(128, 256, 512))
         );
@@ -198,7 +210,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withOptionalAttribute_shouldAllowMissing() {
+    @DisplayName("Validar con atributo opcional debería permitir que falte")
+    void validar_conAtributoOpcional_deberiaPermitirQueFalte() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "size", "type", "string", "required", true),
                 Map.of("name", "color", "type", "string", "required", false)
@@ -210,7 +223,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withNullValue_shouldThrowException() {
+    @DisplayName("Validar con valor nulo debería lanzar excepción")
+    void validar_conValorNulo_deberiaLanzarExcepcion() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "name", "type", "string", "required", true)
         );
@@ -228,7 +242,8 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withEmptyDefinitions_shouldPass() {
+    @DisplayName("Validar con definiciones vacías debería pasar")
+    void validar_conDefinicionesVacias_deberiaPasar() {
         List<Map<String, Object>> definitions = List.of();
         Map<String, Object> attributes = Map.of("anything", "value");
 
@@ -236,14 +251,16 @@ class ProductAttributeValidatorTest {
     }
 
     @Test
-    void validate_withNullDefinitions_shouldPass() {
+    @DisplayName("Validar con definiciones nulas debería pasar")
+    void validar_conDefinicionesNulas_deberiaPasar() {
         Map<String, Object> attributes = Map.of("anything", "value");
 
         assertDoesNotThrow(() -> validator.validate(attributes, null));
     }
 
     @Test
-    void validate_withDecimalNumbers_shouldValidateRangeCorrectly() {
+    @DisplayName("Validar con números decimales debería validar el rango correctamente")
+    void validar_conNumerosDecimales_deberiaValidarRangoCorrectamente() {
         List<Map<String, Object>> definitions = List.of(
                 Map.of("name", "weight", "type", "number", "required", true, "min", 0.1, "max", 100.5)
         );

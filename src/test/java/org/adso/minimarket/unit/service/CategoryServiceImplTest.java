@@ -5,6 +5,7 @@ import org.adso.minimarket.exception.NotFoundException;
 import org.adso.minimarket.models.Category;
 import org.adso.minimarket.repository.jpa.CategoryRepository;
 import org.adso.minimarket.service.CategoryServiceImpl;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,7 +32,8 @@ public class CategoryServiceImplTest {
     private CategoryRepository categoryRepository;
 
     @Test
-    void getById_whenFound_returnsCategory() {
+    @DisplayName("Obtener por id cuando se encuentra retorna categoría")
+    void obtenerPorId_cuandoSeEncuentra_retornaCategoria() {
         Category category = new Category(1L, "Ropa", List.of(), null);
 
         when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
@@ -44,7 +46,8 @@ public class CategoryServiceImplTest {
     }
 
     @Test
-    void getById_whenNotFound_throwsNotFoundException() {
+    @DisplayName("Obtener por id cuando no se encuentra lanza NotFoundException")
+    void obtenerPorId_cuandoNoSeEncuentra_lanzaNotFoundException() {
         when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> categoryService.getById(99L));
@@ -52,7 +55,8 @@ public class CategoryServiceImplTest {
     }
 
     @Test
-    void createCategory_withoutParent_savesAndReturnsCategory() {
+    @DisplayName("Crear categoría sin padre guarda y retorna categoría")
+    void crearCategoria_sinPadre_guardaYRetornaCategoria() {
         CreateCategoryRequest req = new CreateCategoryRequest();
         ReflectionTestUtils.setField(req, "name", "Electronica");
         ReflectionTestUtils.setField(req, "attributeDefinitions", List.of());
@@ -72,7 +76,8 @@ public class CategoryServiceImplTest {
     }
 
     @Test
-    void createCategory_withParent_loadsParentAndSaves() {
+    @DisplayName("Crear categoría con padre carga el padre y guarda")
+    void crearCategoria_conPadre_cargaPadreYGuarda() {
         Category parent = new Category(1L, "Ropa", List.of(), null);
 
         CreateCategoryRequest req = new CreateCategoryRequest();
@@ -96,7 +101,8 @@ public class CategoryServiceImplTest {
     }
 
     @Test
-    void createCategory_withInvalidParent_throwsNotFoundException() {
+    @DisplayName("Crear categoría con padre inválido lanza NotFoundException")
+    void crearCategoria_conPadreInvalido_lanzaNotFoundException() {
         CreateCategoryRequest req = new CreateCategoryRequest();
         ReflectionTestUtils.setField(req, "name", "Subcategoria");
         ReflectionTestUtils.setField(req, "attributeDefinitions", List.of());
@@ -109,7 +115,8 @@ public class CategoryServiceImplTest {
     }
 
     @Test
-    void getAllFeaturedCategories_returnsUpToFour() {
+    @DisplayName("Obtener todas las categorías destacadas retorna hasta cuatro")
+    void obtenerTodasCategoriasDestacadas_retornaHastaCuatro() {
         List<Category> featured = List.of(
                 new Category(1L, "Ropa", List.of(), null),
                 new Category(2L, "Electro", List.of(), null),
@@ -126,7 +133,8 @@ public class CategoryServiceImplTest {
     }
 
     @Test
-    void getAllFeaturedCategories_whenEmpty_returnsEmptyList() {
+    @DisplayName("Obtener todas las categorías destacadas cuando está vacío retorna lista vacía")
+    void obtenerTodasCategoriasDestacadas_cuandoVacio_retornaListaVacia() {
         when(categoryRepository.findTop4ByOrderByIdAsc()).thenReturn(List.of());
 
         List<Category> result = categoryService.getAllFeaturedCategories();
