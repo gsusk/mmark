@@ -8,8 +8,7 @@ services:
       - "ELASTIC_PASSWORD=${ES_PASSWORD}"
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
-      - "9200:9200"
-      - "9300:9300"
+      - "9400:9400"
     volumes:
       - esdata:/usr/share/elasticsearch/data
     networks:

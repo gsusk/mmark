@@ -75,7 +75,8 @@ VALUES
        (38, 'Teclado Mecánico Razer BlackWidow V4 Pro', 'Un teclado gaming de élite con interruptores mecánicos Razer para una ejecución rápida y precisa. Cuenta con una iluminación subyacente envolvente, teclas multimedia dedicadas y un dial de control personalizable para tener todo el mando de tu setup.', 169.00, 25, 6, NOW(), 'Razer', '{"marca": "Razer", "tipo": "Keyboard"}', 'teclado-mecanico-razer-blackwidow-v4-pro'),
        (39, 'Aspiradora Inalámbrica Dyson V15 Detect Absolute', 'La aspiradora sin cable más potente e inteligente de Dyson. Cuenta con una luz que revela el polvo invisible en suelos duros y una pantalla LCD que muestra pruebas científicas de una limpieza profunda en tiempo real. Máxima succión para todo tipo de superficies.', 749.00, 10, 1, NOW(), 'Dyson', '{"marca": "Dyson", "tipo": "Aspiradora"}', 'aspiradora-inalambrica-dyson-v15-detect-absolute'),
        (40, 'Horno Holandés Le Creuset Hierro Fundido 5.5 qt', 'Un clásico indispensable en la cocina. El hierro fundido vitrificado garantiza una distribución y retención del calor uniformes para cocciones lentas perfectas. Su interior esmaltado es resistente a manchas y fácil de limpiar. Apto para todas las fuentes de calor.', 380.00, 15, 17, NOW(), 'Le Creuset', '{"material": "Hierro Fundido", "talla": "5.5 qt"}', 'horno-holandes-le-creuset-hierro-fundido-55-qt'),
-       (41, 'Freidora de Aire Ninja Foodi 6 en 1 8-qt (DualZone)', 'Cocina dos comidas de dos maneras diferentes y termina al mismo tiempo con la tecnología DualZone. Gran capacidad de 8 cuartos ideal para familias, con funciones para freír con aire, asar, deshidratar y más, usando hasta un 75% menos de grasa.', 199.00, 22, 1, NOW(), 'Ninja', '{"marca": "Ninja", "capacidad": "8 qt"}', 'freidora-de-aire-ninja-foodi-6-en-1-8-qt-dualzone');
+       (41, 'Freidora de Aire Ninja Foodi 6 en 1 8-qt (DualZone)', 'Cocina dos comidas de dos maneras diferentes y termina al mismo tiempo con la tecnología DualZone. Gran capacidad de 8 cuartos ideal para familias, con funciones para freír con aire, asar, deshidratar y más, usando hasta un 75% menos de grasa.', 199.00, 22, 1, NOW(), 'Ninja', '{"marca": "Ninja", "capacidad": "8 qt"}', 'freidora-de-aire-ninja-foodi-6-en-1-8-qt-dualzone'),
+       (42, 'Libro Agotado - Ejemplo de prueba', 'Producto de prueba sin stock para validar el comportamiento del sistema ante productos no disponibles.', 9.99, 0, 15, NOW(), 'Editorial Test', '{"autor": "Test Author", "genero": "Prueba"}', 'libro-agotado-ejemplo-de-prueba');
 
 INSERT INTO image (product_id, url, position)
 VALUES (1, 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&q=80&w=1500', 0),
@@ -124,7 +125,8 @@ VALUES (1, 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=fo
 INSERT INTO user (id, name, last_name, email, password, role, created_at)
 VALUES (1, 'Mario', 'Contreras', 'marioc@gmail.com', 'password123', 'USER', NOW()),
        (2, 'Laura', 'Gomez', 'laura@gmail.com', 'password123', 'USER', NOW()),
-       (3, 'Andres', 'Lopez', 'andres@gmail.com', 'password123', 'USER', NOW());
+       (3, 'Andres', 'Lopez', 'andres@gmail.com', 'password123', 'USER', NOW()),
+       (4, 'Admin', 'Sistema', 'admin@minimarket.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN', NOW());
 
 INSERT INTO cart (id, user_id, guest_id, status, created_at)
 VALUES (1, 1, NULL, 'ACTIVE', NOW()),

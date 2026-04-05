@@ -96,6 +96,17 @@
             "sortable": true
           },
           {
+            "name": "megapixeles",
+            "type": "number",
+            "required": false,
+            "facetable": true,
+            "filterType": "RANGE",
+            "facetStrategy": "NONE",
+            "cardinalityHint": "LOW",
+            "searchable": false,
+            "sortable": true
+          },
+          {
             "name": "dual_sim",
             "type": "boolean",
             "facetable": true,
