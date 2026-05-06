@@ -23,7 +23,7 @@ public interface CartRepository extends JpaRepository<Cart, Long> {
                 SELECT c FROM Cart c
                 LEFT JOIN FETCH c.cartItems ci
                 LEFT JOIN FETCH ci.product
-                WHERE c.user = :userId AND c.status = :status
+                WHERE c.user.id = :userId AND c.status = :status
             """)
     Optional<Cart> findCartWithProductsByUserIdAndStatus(Long userId, CartStatus status);
 
