@@ -28,12 +28,18 @@ public class UserControllerImpl implements UserController {
     @Override
     @GetMapping("/user/me")
     public ResponseEntity<BasicUser> getMe(@AuthenticationPrincipal(errorOnInvalidType = true) UserPrincipal userPrincipal) {
+        if (userPrincipal == null || userPrincipal.getId() == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(userService.getBasicUserById(userPrincipal.getId()));
     }
 
     @Override
     @GetMapping("/user/profile")
     public ResponseEntity<DetailedUser> getProfile(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null || userPrincipal.getUser() == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(userMapper.toDetailedUserDto(userPrincipal.getUser()));
     }
 
@@ -41,6 +47,9 @@ public class UserControllerImpl implements UserController {
     @PutMapping("/user/profile")
     public ResponseEntity<DetailedUser> updateProfile(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                       @RequestBody @Valid UserUpdateRequest userUpdateRequest) {
+        if (userPrincipal == null || userPrincipal.getId() == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
         return ResponseEntity.ok(userService.updateUserProfile(userUpdateRequest, userPrincipal.getId()));
     }
 
@@ -48,6 +57,9 @@ public class UserControllerImpl implements UserController {
     @Override
     @DeleteMapping("/user")
     public ResponseEntity<?> deleteUser(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        if (userPrincipal == null || userPrincipal.getId() == null) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.UNAUTHORIZED).build();
+        }
         userService.deleteUser(userPrincipal.getId());
         ResponseCookie.from("X-REFRESH-TOKEN").build();
         ResponseCookie.from("CGUESTID").build();

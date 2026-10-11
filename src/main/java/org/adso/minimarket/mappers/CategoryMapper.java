@@ -12,6 +12,7 @@ public interface CategoryMapper {
 
     @Mapping(target = "parentName", expression = "java(category.getParent() != null ? category.getParent().getName() : null)")
     @Mapping(target = "fullPath", expression = "java(category.getFullPath())")
+    @Mapping(target = "attributeDefinitions", expression = "java(category.getAllAttributeDefinitions())")
     CategorySummary toSummary(Category category);
 
     List<CategorySummary> toSummaryList(List<Category> allFeaturedCategories);

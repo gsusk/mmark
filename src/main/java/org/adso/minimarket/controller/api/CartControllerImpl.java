@@ -78,7 +78,7 @@ public class CartControllerImpl implements CartController {
     @PutMapping("/cart/items/{itemId}")
     public ResponseEntity<ShoppingCart> updateItemQuantity(@AuthenticationPrincipal UserPrincipal userPrincipal,
                                                            @RequestBody UpdateQuantityRequest body,
-                                                           @CookieValue(value = "CGUESTID") UUID guestId,
+                                                           @CookieValue(value = "CGUESTID", required = false) UUID guestId,
                                                            @PathVariable("itemId") Long productId) {
         Long userId = getUserIdFromPrincipal(userPrincipal);
         if (userId == null && guestId == null) {

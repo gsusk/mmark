@@ -39,7 +39,6 @@ public class CreateProductRequest {
     @Min(value = 0)
     private Integer stock = 0;
 
-    @NotNull(message = "attributes required")
     private Map<String, Object> specifications;
 
     private List<String> images;

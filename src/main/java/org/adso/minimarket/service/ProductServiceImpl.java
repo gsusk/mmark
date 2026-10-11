@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -38,12 +40,41 @@ public class ProductServiceImpl implements ProductService {
         this.inventoryService = inventoryService;
     }
 
+    private Map<String, Object> prepareSpecifications(Map<String, Object> inputSpecs, String brand, List<Map<String, Object>> attributeDefinitions) {
+        Map<String, Object> specifications = inputSpecs != null ? new HashMap<>(inputSpecs) : new HashMap<>();
+
+        if (attributeDefinitions != null) {
+            boolean categoryHasMarca = attributeDefinitions.stream()
+                    .anyMatch(def -> "marca".equalsIgnoreCase((String) def.get("name")));
+            if (categoryHasMarca && (!specifications.containsKey("marca") || specifications.get("marca") == null || specifications.get("marca").toString().isBlank())) {
+                if (brand != null && !brand.isBlank()) {
+                    specifications.put("marca", brand);
+                }
+            }
+
+            for (Map<String, Object> def : attributeDefinitions) {
+                String name = (String) def.get("name");
+                boolean required = Boolean.TRUE.equals(def.get("required"));
+                if (!required && specifications.containsKey(name)) {
+                    Object val = specifications.get(name);
+                    if (val == null || (val instanceof String s && s.isBlank())) {
+                        specifications.remove(name);
+                    }
+                }
+            }
+        }
+
+        return specifications;
+    }
+
     @Override
     @Transactional
     public Long createProduct(CreateProductRequest productRequest) {
         Category category = categoryService.getById(productRequest.getCategoryId());
+        List<Map<String, Object>> attributeDefs = category.getAllAttributeDefinitions();
+        Map<String, Object> specifications = prepareSpecifications(productRequest.getSpecifications(), productRequest.getBrand(), attributeDefs);
 
-        attributeValidator.validate(productRequest.getSpecifications(), category.getAllAttributeDefinitions());
+        attributeValidator.validate(specifications, attributeDefs);
 
         int initialStock = productRequest.getStock() != null ? productRequest.getStock() : 0;
 
@@ -54,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
                 initialStock,
                 category,
                 productRequest.getBrand(),
-                productRequest.getSpecifications()
+                specifications
         );
 
         if (productRequest.getImages() != null) {
@@ -66,7 +97,6 @@ public class ProductServiceImpl implements ProductService {
                 product.getImages().add(image);
             }
         }
-
 
         Product savedProduct = productRepository.save(product);
 
@@ -115,14 +145,17 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new NotFoundException("Product not found"));
 
         Category category = categoryService.getById(request.getCategoryId());
-        attributeValidator.validate(request.getSpecifications(), category.getAllAttributeDefinitions());
+        List<Map<String, Object>> attributeDefs = category.getAllAttributeDefinitions();
+        Map<String, Object> specifications = prepareSpecifications(request.getSpecifications(), request.getBrand(), attributeDefs);
+
+        attributeValidator.validate(specifications, attributeDefs);
 
         product.setName(request.getName());
         product.setDescription(request.getDescription());
         product.setPrice(request.getPrice());
         product.setBrand(request.getBrand());
         product.setCategory(category);
-        product.setAttributes(request.getSpecifications());
+        product.setAttributes(specifications);
 
         if (request.getStock() != null && !request.getStock().equals(product.getStock())) {
             int difference = request.getStock() - product.getStock();
