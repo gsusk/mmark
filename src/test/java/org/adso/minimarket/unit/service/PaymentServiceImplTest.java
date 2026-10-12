@@ -7,6 +7,7 @@ import org.adso.minimarket.models.order.Order;
 import org.adso.minimarket.models.order.OrderStatus;
 import org.adso.minimarket.models.payment.Payment;
 import org.adso.minimarket.models.payment.PaymentStatus;
+import org.adso.minimarket.config.StripeConfig;
 import org.adso.minimarket.models.user.User;
 import org.adso.minimarket.repository.jpa.OrderRepository;
 import org.adso.minimarket.repository.jpa.PaymentRepository;
@@ -39,6 +40,9 @@ class PaymentServiceImplTest {
 
     @Mock
     private OrderRepository orderRepository;
+
+    @Mock
+    private StripeConfig stripeConfig;
 
     private Order buildOrder(UUID id, Long userId) {
         User user = new User("Test", "User", "test@test.com", "pass");
@@ -172,5 +176,67 @@ class PaymentServiceImplTest {
 
         assertThrows(NotFoundException.class,
                 () -> paymentService.getPaymentByOrderId(orderId, 999L));
+    }
+
+    @Test
+    @DisplayName("Confirmar pago completa el pago y la orden exitosamente")
+    void confirmarPago_completaElPagoYLaOrdenExitosamente() {
+        UUID orderId = UUID.randomUUID();
+        Order order = buildOrder(orderId, 1L);
+
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(new BigDecimal("150.00"));
+        payment.setCurrency("usd");
+        payment.setPaymentReference("PAY-MOCK123");
+        payment.setStatus(PaymentStatus.PENDING);
+
+        when(paymentRepository.findByOrderId(orderId)).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        CreatePaymentResponse response = paymentService.confirmPayment(orderId, 1L, "pm_card_visa");
+
+        assertNotNull(response);
+        assertEquals("completed", response.getStatus());
+        assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
+        assertEquals(OrderStatus.COMPLETED, order.getStatus());
+        verify(paymentRepository).save(payment);
+        verify(orderRepository).save(order);
+    }
+
+    @Test
+    @DisplayName("Procesar webhook de Stripe actualiza pago a completado")
+    void procesarWebhook_actualizaPagoACompletado() {
+        String payload = """
+        {
+          "id": "evt_test",
+          "type": "payment_intent.succeeded",
+          "data": {
+            "object": {
+              "id": "pi_test123",
+              "object": "payment_intent",
+              "status": "succeeded"
+            }
+          }
+        }
+        """;
+
+        Order order = buildOrder(UUID.randomUUID(), 1L);
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setPaymentReference("pi_test123");
+        payment.setStatus(PaymentStatus.PENDING);
+
+        when(paymentRepository.findByPaymentReference("pi_test123")).thenReturn(Optional.of(payment));
+        when(paymentRepository.save(any(Payment.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+
+        paymentService.processWebhook(payload, null);
+
+        assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
+        assertEquals(OrderStatus.COMPLETED, order.getStatus());
+        verify(paymentRepository).save(payment);
+        verify(orderRepository).save(order);
     }
 }

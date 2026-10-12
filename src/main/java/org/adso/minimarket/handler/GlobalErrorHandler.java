@@ -32,7 +32,10 @@ public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalErrorHandler.class);
 
     private static final Map<String, String> CONSTRAINT_MESSAGES = Map.of(
-            "uk_user_email", "Email already in use"
+            "uk_user_email", "Email already in use",
+            "idx_product_slug", "Ya existe un producto registrado con este nombre o slug",
+            "product_slug", "Ya existe un producto registrado con este nombre o slug",
+            "uk_category_name", "Ya existe una categoría con este nombre"
     );
 
     @ExceptionHandler(BaseException.class)
@@ -109,10 +112,15 @@ public class GlobalErrorHandler extends ResponseEntityExceptionHandler {
                 ))
                 .toList();
 
+        String validationSummary = validationErrors.stream()
+                .map(err -> err.field() + ": " + err.message())
+                .collect(java.util.stream.Collectors.joining(", "));
+        String message = validationSummary.isBlank() ? "Validation Failed" : validationSummary;
+
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation Failed",
-                ex.getMessage(),
+                message,
                 ErrorCode.VALIDATION_FAILED.name(),
                 LocalDateTime.now(),
                 getRequestPath(request),

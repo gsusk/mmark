@@ -41,7 +41,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Map<String, Object> prepareSpecifications(Map<String, Object> inputSpecs, String brand, List<Map<String, Object>> attributeDefinitions) {
-        Map<String, Object> specifications = inputSpecs != null ? new HashMap<>(inputSpecs) : new HashMap<>();
+        Map<String, Object> specifications = new HashMap<>();
+        if (inputSpecs != null) {
+            for (Map.Entry<String, Object> entry : inputSpecs.entrySet()) {
+                if (entry.getKey() != null && !entry.getKey().isBlank()) {
+                    specifications.put(entry.getKey().trim(), entry.getValue());
+                }
+            }
+        }
 
         if (attributeDefinitions != null) {
             boolean categoryHasMarca = attributeDefinitions.stream()
@@ -54,11 +61,27 @@ public class ProductServiceImpl implements ProductService {
 
             for (Map<String, Object> def : attributeDefinitions) {
                 String name = (String) def.get("name");
+                String type = (String) def.get("type");
                 boolean required = Boolean.TRUE.equals(def.get("required"));
-                if (!required && specifications.containsKey(name)) {
+                if (specifications.containsKey(name)) {
                     Object val = specifications.get(name);
                     if (val == null || (val instanceof String s && s.isBlank())) {
-                        specifications.remove(name);
+                        if (!required) {
+                            specifications.remove(name);
+                        }
+                    } else if ("number".equalsIgnoreCase(type) && val instanceof String s) {
+                        try {
+                            if (s.contains(".")) {
+                                specifications.put(name, Double.parseDouble(s));
+                            } else {
+                                specifications.put(name, Long.parseLong(s));
+                            }
+                        } catch (NumberFormatException ignored) {
+                        }
+                    } else if ("boolean".equalsIgnoreCase(type) && val instanceof String s) {
+                        if ("true".equalsIgnoreCase(s) || "false".equalsIgnoreCase(s)) {
+                            specifications.put(name, Boolean.parseBoolean(s));
+                        }
                     }
                 }
             }

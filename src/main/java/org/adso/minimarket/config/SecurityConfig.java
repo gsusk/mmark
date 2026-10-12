@@ -75,7 +75,7 @@ public class SecurityConfig {
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.GET, ProductRoutes.GET_PRODUCT,
                                         ProductRoutes.GET_FEATURED_PRODUCTS).permitAll()
-                                .requestMatchers("/error", "/cart", "/cart/**", "/search", "/categories/featured").permitAll()
+                                .requestMatchers("/error", "/cart", "/cart/**", "/search", "/categories/featured", "/api/payments/webhook").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.POST, ProductRoutes.CREATE_PRODUCT).hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, ProductRoutes.UPDATE_PRODUCT).hasRole("ADMIN")
